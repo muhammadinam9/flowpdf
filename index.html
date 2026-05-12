@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FlowPDF — Free PDF Tools, No Limits</title>
+<meta name="description" content="Free, unlimited PDF tools. Merge, edit, and resize PDFs with smart erase, text, draw, redact and more. 100% browser-based. No sign-up. No limits.">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,400;12..96,500;12..96,700;12..96,800&family=Instrument+Serif:ital@0;1&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#08080a;
+  --bg2:#0e0e12;
+  --surface:#141418;
+  --card:#1a1a20;
+  --card2:#212128;
+  --border:#28282f;
+  --border2:#35353f;
+  --text:#f2f2f8;
+  --muted:#7070a0;
+  --muted2:#404060;
+  --accent:#ff6b35;
+  --accent2:#7c6bff;
+  --accent3:#22d3a5;
+  --glow-orange:rgba(255,107,53,0.2);
+  --glow-purple:rgba(124,107,255,0.2);
+  --glow-teal:rgba(34,211,165,0.2);
+}
+
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:'Bricolage Grotesque',sans-serif;
+  overflow-x:hidden;line-height:1.6;
+}
+
+/* ── NOISE TEXTURE ── */
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:0;opacity:0.6;
+}
+
+/* ── NAV ── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  padding:0 clamp(20px,5vw,60px);height:64px;
+  display:flex;align-items:center;justify-content:space-between;
+  background:rgba(8,8,10,0.8);backdrop-filter:blur(20px);
+  border-bottom:1px solid rgba(255,255,255,0.04);
+}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.nav-logo-mark{
+  width:36px;height:36px;border-radius:10px;
+  background:linear-gradient(135deg,var(--accent),#ff9a5c);
+  display:flex;align-items:center;justify-content:center;font-size:18px;
+  box-shadow:0 0 20px var(--glow-orange);
+}
+.nav-logo-name{
+  font-size:20px;font-weight:800;letter-spacing:-0.04em;color:var(--text);
+}
+.nav-logo-name span{color:var(--accent)}
+.nav-links{display:flex;align-items:center;gap:6px}
+.nav-link{
+  color:var(--muted);font-size:14px;font-weight:500;text-decoration:none;
+  padding:7px 14px;border-radius:8px;transition:all 0.15s;
+}
+.nav-link:hover{color:var(--text);background:var(--card)}
+.nav-cta{
+  background:var(--accent);color:#fff;padding:8px 18px;border-radius:8px;
+  font-size:14px;font-weight:700;text-decoration:none;
+  box-shadow:0 0 20px var(--glow-orange);transition:all 0.2s;
+}
+.nav-cta:hover{background:#e85a25;transform:translateY(-1px);box-shadow:0 0 32px var(--glow-orange)}
+
+/* ── HERO ── */
+.hero{
+  min-height:100vh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  text-align:center;padding:100px clamp(20px,5vw,60px) 60px;
+  position:relative;overflow:hidden;
+}
+
+/* Animated gradient orbs */
+.orb{position:absolute;border-radius:50%;filter:blur(80px);pointer-events:none;animation:drift 20s ease-in-out infinite}
+.orb1{width:600px;height:600px;background:radial-gradient(circle,rgba(255,107,53,0.12),transparent 70%);top:-200px;left:-200px;animation-delay:0s}
+.orb2{width:500px;height:500px;background:radial-gradient(circle,rgba(124,107,255,0.1),transparent 70%);bottom:-100px;right:-150px;animation-delay:-7s}
+.orb3{width:400px;height:400px;background:radial-gradient(circle,rgba(34,211,165,0.08),transparent 70%);top:50%;left:50%;transform:translate(-50%,-50%);animation-delay:-14s}
+
+@keyframes drift{
+  0%,100%{transform:translate(0,0) scale(1)}
+  33%{transform:translate(30px,-20px) scale(1.05)}
+  66%{transform:translate(-20px,30px) scale(0.95)}
+}
+
+/* Grid lines */
+.hero-grid{
+  position:absolute;inset:0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.02) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,0.02) 1px,transparent 1px);
+  background-size:60px 60px;
+  mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,black 0%,transparent 100%);
+}
+
+.hero-content{position:relative;z-index:1;max-width:860px}
+
+.hero-eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(255,107,53,0.1);border:1px solid rgba(255,107,53,0.25);
+  color:var(--accent);font-size:13px;font-weight:700;
+  padding:6px 16px;border-radius:999px;margin-bottom:28px;
+  letter-spacing:0.06em;text-transform:uppercase;
+  animation:fadeUp 0.6s ease forwards;
+}
+.hero-eyebrow::before{content:'●';font-size:8px;animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+
+.hero-h1{
+  font-size:clamp(40px,7vw,88px);font-weight:800;
+  letter-spacing:-0.04em;line-height:1.05;margin-bottom:24px;
+  animation:fadeUp 0.6s ease 0.1s both;
+}
+.hero-h1 .line1{display:block;color:var(--text)}
+.hero-h1 .line2{
+  display:block;
+  font-family:'Instrument Serif',serif;font-style:italic;font-weight:400;
+  background:linear-gradient(135deg,var(--accent) 0%,#ff9a5c 40%,var(--accent2) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+
+.hero-sub{
+  font-size:clamp(16px,2.5vw,20px);color:var(--muted);
+  max-width:560px;margin:0 auto 40px;line-height:1.65;font-weight:400;
+  animation:fadeUp 0.6s ease 0.2s both;
+}
+
+.hero-btns{
+  display:flex;gap:12px;justify-content:center;flex-wrap:wrap;
+  animation:fadeUp 0.6s ease 0.3s both;
+  margin-bottom:60px;
+}
+.btn-hero-primary{
+  display:inline-flex;align-items:center;gap:10px;
+  background:var(--accent);color:#fff;
+  padding:15px 30px;border-radius:12px;
+  font-size:16px;font-weight:700;text-decoration:none;
+  box-shadow:0 4px 24px var(--glow-orange);
+  transition:all 0.2s;
+}
+.btn-hero-primary:hover{background:#e85a25;transform:translateY(-2px);box-shadow:0 8px 40px var(--glow-orange)}
+.btn-hero-secondary{
+  display:inline-flex;align-items:center;gap:10px;
+  background:transparent;color:var(--text);
+  border:1px solid var(--border2);
+  padding:15px 30px;border-radius:12px;
+  font-size:16px;font-weight:600;text-decoration:none;
+  transition:all 0.2s;
+}
+.btn-hero-secondary:hover{background:var(--card);border-color:var(--border2);transform:translateY(-2px)}
+
+/* Stats row */
+.stats-row{
+  display:flex;gap:32px;justify-content:center;flex-wrap:wrap;
+  animation:fadeUp 0.6s ease 0.4s both;
+}
+.stat{text-align:center}
+.stat-num{
+  font-size:28px;font-weight:800;letter-spacing:-0.04em;
+  background:linear-gradient(135deg,var(--text),var(--muted));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.stat-label{font-size:12px;color:var(--muted);font-weight:500;margin-top:2px;text-transform:uppercase;letter-spacing:0.06em}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── TOOLS SECTION ── */
+.section{padding:clamp(60px,8vw,120px) clamp(20px,5vw,60px);position:relative;z-index:1}
+.section-label{
+  display:inline-flex;align-items:center;gap:8px;
+  font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;
+  color:var(--muted);margin-bottom:16px;
+}
+.section-label::before{content:'';width:24px;height:1px;background:var(--border2)}
+.section-title{
+  font-size:clamp(28px,4vw,48px);font-weight:800;letter-spacing:-0.04em;
+  line-height:1.15;margin-bottom:12px;
+}
+.section-sub{font-size:17px;color:var(--muted);max-width:480px;line-height:1.6;font-weight:400}
+
+/* Tool cards */
+.tools-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+  gap:24px;margin-top:48px;
+  max-width:1200px;margin-left:auto;margin-right:auto;
+}
+
+.tool-card{
+  background:var(--card);border:1px solid var(--border);border-radius:20px;
+  overflow:hidden;transition:all 0.3s;text-decoration:none;color:inherit;
+  display:flex;flex-direction:column;
+  position:relative;
+}
+.tool-card:hover{transform:translateY(-6px);border-color:var(--border2);box-shadow:0 20px 60px rgba(0,0,0,0.4)}
+.tool-card::before{
+  content:'';position:absolute;inset:0;opacity:0;transition:opacity 0.3s;border-radius:20px;
+}
+.tool-card.orange::before{background:radial-gradient(ellipse 80% 60% at 50% 0%,var(--glow-orange),transparent)}
+.tool-card.purple::before{background:radial-gradient(ellipse 80% 60% at 50% 0%,var(--glow-purple),transparent)}
+.tool-card:hover::before{opacity:1}
+
+.tool-card-header{
+  padding:32px 32px 0;display:flex;align-items:flex-start;gap:16px;
+}
+.tool-icon{
+  width:56px;height:56px;border-radius:16px;
+  display:flex;align-items:center;justify-content:center;font-size:26px;
+  flex-shrink:0;
+}
+.tool-icon.orange{background:rgba(255,107,53,0.15);box-shadow:0 0 24px rgba(255,107,53,0.2)}
+.tool-icon.purple{background:rgba(124,107,255,0.15);box-shadow:0 0 24px rgba(124,107,255,0.2)}
+
+.tool-card-title{font-size:24px;font-weight:800;letter-spacing:-0.03em;margin-bottom:6px}
+.tool-card-sub{font-size:14px;color:var(--muted);line-height:1.5;font-weight:400}
+
+.tool-card-body{padding:24px 32px;flex:1}
+.feature-list{list-style:none;display:flex;flex-direction:column;gap:10px}
+.feature-list li{
+  display:flex;align-items:center;gap:10px;
+  font-size:14px;color:var(--muted);font-weight:400;
+}
+.feature-list li::before{
+  content:'';width:6px;height:6px;border-radius:50%;flex-shrink:0;
+  background:var(--border2);
+}
+.feature-list.orange li::before{background:var(--accent)}
+.feature-list.purple li::before{background:var(--accent2)}
+
+.tool-card-footer{
+  padding:24px 32px 28px;
+  border-top:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.tool-card-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:11px 22px;border-radius:10px;
+  font-size:14px;font-weight:700;text-decoration:none;
+  transition:all 0.2s;
+}
+.tool-card-btn.orange{background:var(--accent);color:#fff;box-shadow:0 4px 16px var(--glow-orange)}
+.tool-card-btn.orange:hover{background:#e85a25;transform:translateX(2px)}
+.tool-card-btn.purple{background:var(--accent2);color:#fff;box-shadow:0 4px 16px var(--glow-purple)}
+.tool-card-btn.purple:hover{background:#6a59e8;transform:translateX(2px)}
+.tool-card.teal::before{background:radial-gradient(ellipse 80% 60% at 50% 0%,var(--glow-teal),transparent)}
+.tool-icon.teal{background:rgba(34,211,165,0.15);box-shadow:0 0 24px rgba(34,211,165,0.2)}
+.tool-card-btn.teal{background:var(--accent3);color:#000;box-shadow:0 4px 16px var(--glow-teal)}
+.tool-card-btn.teal:hover{background:#1ab88f;transform:translateX(2px)}
+.feature-list.teal li::before{background:var(--accent3)}
+  font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;
+  color:var(--accent3);display:flex;align-items:center;gap:5px;
+}
+.tool-free-badge::before{content:'●';font-size:8px}
+
+/* ── FEATURES SECTION ── */
+.features-section{
+  background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);
+  padding:clamp(60px,8vw,100px) clamp(20px,5vw,60px);
+}
+.features-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+  gap:32px;margin-top:48px;max-width:1200px;margin-left:auto;margin-right:auto;
+}
+.feature-item{padding:24px;border-radius:16px;background:var(--card);border:1px solid var(--border);transition:all 0.2s}
+.feature-item:hover{border-color:var(--border2);transform:translateY(-3px)}
+.feature-emoji{font-size:32px;margin-bottom:14px;display:block}
+.feature-title{font-size:16px;font-weight:700;margin-bottom:8px;letter-spacing:-0.02em}
+.feature-desc{font-size:14px;color:var(--muted);line-height:1.6;font-weight:400}
+
+/* ── HOW IT WORKS ── */
+.how-section{padding:clamp(60px,8vw,120px) clamp(20px,5vw,60px)}
+.steps{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:0;margin-top:48px;max-width:900px;margin-left:auto;margin-right:auto;
+  position:relative;
+}
+.steps::before{
+  content:'';position:absolute;top:28px;left:calc(14% + 28px);right:calc(14% + 28px);
+  height:1px;background:linear-gradient(90deg,var(--accent),var(--accent2),var(--accent3));
+  opacity:0.3;
+}
+.step{text-align:center;padding:0 20px;position:relative;z-index:1}
+.step-num{
+  width:56px;height:56px;border-radius:50%;
+  background:var(--card);border:2px solid var(--border2);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Geist Mono',monospace;font-size:18px;font-weight:700;
+  margin:0 auto 16px;color:var(--text);transition:all 0.2s;
+}
+.step:hover .step-num{border-color:var(--accent);color:var(--accent);box-shadow:0 0 20px var(--glow-orange)}
+.step-title{font-size:16px;font-weight:700;margin-bottom:8px}
+.step-desc{font-size:13px;color:var(--muted);line-height:1.6}
+
+/* ── PRIVACY BANNER ── */
+.privacy-banner{
+  margin:0 clamp(20px,5vw,60px) clamp(40px,6vw,80px);
+  background:linear-gradient(135deg,rgba(34,211,165,0.06),rgba(124,107,255,0.06));
+  border:1px solid rgba(34,211,165,0.15);
+  border-radius:20px;padding:48px clamp(24px,5vw,64px);
+  display:flex;align-items:center;gap:40px;flex-wrap:wrap;
+  position:relative;z-index:1;overflow:hidden;
+}
+.privacy-banner::before{
+  content:'🔒';position:absolute;right:40px;top:50%;transform:translateY(-50%);
+  font-size:120px;opacity:0.05;
+}
+.privacy-text h3{font-size:24px;font-weight:800;letter-spacing:-0.03em;margin-bottom:8px}
+.privacy-text p{font-size:15px;color:var(--muted);max-width:480px;line-height:1.6}
+.privacy-badges{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+.priv-badge{
+  display:flex;align-items:center;gap:6px;
+  background:rgba(34,211,165,0.1);border:1px solid rgba(34,211,165,0.2);
+  color:var(--accent3);font-size:12px;font-weight:700;
+  padding:6px 14px;border-radius:999px;letter-spacing:0.04em;
+}
+
+/* ── FAQ ── */
+.faq-section{padding:0 clamp(20px,5vw,60px) clamp(60px,8vw,100px)}
+.faq-grid{max-width:700px;margin:0 auto;margin-top:40px}
+.faq-item{
+  border-bottom:1px solid var(--border);
+  padding:20px 0;cursor:pointer;
+}
+.faq-q{
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  font-size:16px;font-weight:600;color:var(--text);
+}
+.faq-arrow{
+  color:var(--muted);font-size:18px;transition:transform 0.2s;flex-shrink:0;
+}
+.faq-item.open .faq-arrow{transform:rotate(45deg);color:var(--accent)}
+.faq-a{
+  font-size:14px;color:var(--muted);line-height:1.7;max-height:0;
+  overflow:hidden;transition:all 0.3s ease;font-weight:400;
+}
+.faq-item.open .faq-a{max-height:200px;padding-top:12px}
+
+/* ── FOOTER ── */
+footer{
+  background:var(--surface);border-top:1px solid var(--border);
+  padding:clamp(40px,6vw,64px) clamp(20px,5vw,60px) 32px;
+}
+.footer-top{
+  display:flex;gap:48px;flex-wrap:wrap;margin-bottom:40px;
+}
+.footer-brand{flex:1;min-width:220px}
+.footer-brand-logo{display:flex;align-items:center;gap:10px;margin-bottom:14px;text-decoration:none}
+.footer-logo-mark{
+  width:32px;height:32px;border-radius:9px;
+  background:linear-gradient(135deg,var(--accent),#ff9a5c);
+  display:flex;align-items:center;justify-content:center;font-size:16px;
+}
+.footer-brand-name{font-size:18px;font-weight:800;letter-spacing:-0.03em;color:var(--text)}
+.footer-brand-name span{color:var(--accent)}
+.footer-tagline{font-size:13px;color:var(--muted);line-height:1.6;max-width:260px}
+.footer-col h4{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted2);margin-bottom:14px}
+.footer-col a{
+  display:block;font-size:14px;color:var(--muted);text-decoration:none;
+  margin-bottom:8px;transition:color 0.15s;
+}
+.footer-col a:hover{color:var(--text)}
+.footer-bottom{
+  border-top:1px solid var(--border);padding-top:24px;
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;
+}
+.footer-copy{font-size:13px;color:var(--muted2)}
+.footer-made{font-size:13px;color:var(--muted2)}
+.footer-made span{color:var(--accent)}
+
+/* ── CTA SECTION ── */
+.cta-section{
+  padding:clamp(60px,8vw,100px) clamp(20px,5vw,60px);
+  text-align:center;position:relative;z-index:1;
+}
+.cta-card{
+  max-width:720px;margin:0 auto;
+  background:linear-gradient(135deg,rgba(255,107,53,0.08),rgba(124,107,255,0.06));
+  border:1px solid rgba(255,107,53,0.15);
+  border-radius:24px;padding:clamp(40px,6vw,72px) clamp(24px,4vw,56px);
+  position:relative;overflow:hidden;
+}
+.cta-card::after{
+  content:'';position:absolute;inset:-1px;border-radius:24px;
+  background:linear-gradient(135deg,rgba(255,107,53,0.15),transparent,rgba(124,107,255,0.1));
+  pointer-events:none;
+}
+.cta-card h2{font-size:clamp(28px,4vw,48px);font-weight:800;letter-spacing:-0.04em;margin-bottom:14px}
+.cta-card h2 em{font-family:'Instrument Serif',serif;font-style:italic;color:var(--accent)}
+.cta-card p{font-size:17px;color:var(--muted);margin-bottom:32px;line-height:1.6}
+.cta-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+
+/* ── MOBILE ── */
+@media(max-width:640px){
+  .nav-links{display:none}
+  .steps::before{display:none}
+  .privacy-banner::before{display:none}
+  .footer-top{gap:32px}
+  .tools-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- ── NAV ── -->
+<nav>
+  <a href="#" class="nav-logo">
+    <div class="nav-logo-mark">⚡</div>
+    <span class="nav-logo-name">Flow<span>PDF</span></span>
+  </a>
+  <div class="nav-links">
+    <a href="#tools" class="nav-link">Tools</a>
+    <a href="#features" class="nav-link">Features</a>
+    <a href="#how" class="nav-link">How it works</a>
+    <a href="#faq" class="nav-link">FAQ</a>
+  </div>
+  <a href="#tools" class="nav-cta">Get Started Free →</a>
+</nav>
+
+<!-- ── HERO ── -->
+<section class="hero">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+  <div class="hero-grid"></div>
+
+  <div class="hero-content">
+    <div class="hero-eyebrow">Free forever · No sign-up · No limits</div>
+    <h1 class="hero-h1">
+      <span class="line1">PDF tools that are</span>
+      <span class="line2">actually free</span>
+    </h1>
+    <p class="hero-sub">Merge, edit, and resize PDFs with pro-level tools — smart erase, text, draw, redact, custom page sizes and more. Everything runs in your browser. Your files never leave your device.</p>
+    <div class="hero-btns">
+      <a href="pdf-merger.html" class="btn-hero-primary">📄 Merge PDFs Free →</a>
+      <a href="pdf-editor-pro.html" class="btn-hero-secondary">✂️ Edit PDFs Free →</a>
+      <a href="pdf-resize.html" class="btn-hero-secondary">📐 Resize PDFs Free →</a>
+    </div>
+    <div class="stats-row">
+      <div class="stat">
+        <div class="stat-num">3</div>
+        <div class="stat-label">Powerful tools</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">∞</div>
+        <div class="stat-label">No file limits</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">0</div>
+        <div class="stat-label">Files uploaded</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">Free</div>
+        <div class="stat-label">Always & forever</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── TOOLS ── -->
+<section class="section" id="tools">
+  <div style="max-width:1200px;margin:0 auto">
+    <div class="section-label">Our tools</div>
+    <div class="section-title">Everything you need<br>for PDF work</div>
+    <div class="section-sub">Three powerful tools, zero cost. No watermarks, no page limits, no hidden fees.</div>
+
+    <div class="tools-grid">
+
+      <!-- MERGER -->
+      <a href="pdf-merger.html" class="tool-card orange" style="cursor:pointer">
+        <div class="tool-card-header">
+          <div class="tool-icon orange">📄</div>
+          <div>
+            <div class="tool-card-title">PDF Merger</div>
+            <div class="tool-card-sub">Combine any number of PDF files into one, in any order you choose.</div>
+          </div>
+        </div>
+        <div class="tool-card-body">
+          <ul class="feature-list orange">
+            <li>Drag & drop unlimited PDF files</li>
+            <li>Sort A–Z, by size, or drag to reorder</li>
+            <li>↑↓ buttons for easy mobile reordering</li>
+            <li>Right-click context menu per file</li>
+            <li>Instant browser-based processing</li>
+            <li>No file size limits</li>
+          </ul>
+        </div>
+        <div class="tool-card-footer">
+          <span class="tool-card-btn orange">Merge PDFs →</span>
+          <span class="tool-free-badge">Free forever</span>
+        </div>
+      </a>
+
+      <!-- EDITOR -->
+      <a href="pdf-editor-pro.html" class="tool-card purple" style="cursor:pointer">
+        <div class="tool-card-header">
+          <div class="tool-icon purple">✂️</div>
+          <div>
+            <div class="tool-card-title">PDF Editor Pro</div>
+            <div class="tool-card-sub">Advanced editing tools — erase, text, draw, redact and manage pages.</div>
+          </div>
+        </div>
+        <div class="tool-card-body">
+          <ul class="feature-list purple">
+            <li>🎨 Smart Color Match Erase</li>
+            <li>✏️ Add text anywhere on page</li>
+            <li>🖊️ Freehand drawing & annotation</li>
+            <li>⬛ Legal-grade black redaction</li>
+            <li>📐 Rectangle & highlight shapes</li>
+            <li>📄 Page manager — reorder, duplicate, delete</li>
+            <li>↩️ Full undo/redo history</li>
+          </ul>
+        </div>
+        <div class="tool-card-footer">
+          <span class="tool-card-btn purple">Edit PDFs →</span>
+          <span class="tool-free-badge">Free forever</span>
+        </div>
+      </a>
+
+      <!-- RESIZER -->
+      <a href="pdf-resize.html" class="tool-card teal" style="cursor:pointer">
+        <div class="tool-card-header">
+          <div class="tool-icon teal">📐</div>
+          <div>
+            <div class="tool-card-title">PDF Resizer</div>
+            <div class="tool-card-sub">Resize any PDF to exact dimensions — 8 presets or fully custom sizes.</div>
+          </div>
+        </div>
+        <div class="tool-card-body">
+          <ul class="feature-list teal">
+            <li>📄 8 presets: A4, A3, A5, Letter, Legal & more</li>
+            <li>📏 Custom size in mm, cm, in, px or pt</li>
+            <li>🔄 Portrait / Landscape orientation</li>
+            <li>⊡ Fit, Fill, Stretch or Center content</li>
+            <li>📊 Live file size & dimension info</li>
+            <li>📄 Apply to all pages or custom range</li>
+            <li>↩️ Full undo/redo + side-by-side preview</li>
+          </ul>
+        </div>
+        <div class="tool-card-footer">
+          <span class="tool-card-btn teal">Resize PDFs →</span>
+          <span class="tool-free-badge">Free forever</span>
+        </div>
+      </a>
+
+    </div>
+  </div>
+</section>
+
+<!-- ── FEATURES ── -->
+<section class="features-section" id="features">
+  <div style="max-width:1200px;margin:0 auto">
+    <div class="section-label">Why FlowPDF</div>
+    <div class="section-title">Built different</div>
+    <div class="section-sub">Most PDF tools upload your files to servers and charge monthly fees. We don't.</div>
+    <div class="features-grid">
+      <div class="feature-item">
+        <span class="feature-emoji">📐</span>
+        <div class="feature-title">Advanced Resizer</div>
+        <div class="feature-desc">Resize to A4, Letter, custom mm/cm/in/px — with Fit, Fill, Stretch or Center modes and live before/after preview.</div>
+      </div>
+      <div class="feature-item">
+        <span class="feature-emoji">🔒</span>
+        <div class="feature-title">100% Private</div>
+        <div class="feature-desc">Your files never leave your device. All processing happens locally in your browser using JavaScript — zero server uploads.</div>
+      </div>
+      <div class="feature-item">
+        <span class="feature-emoji">♾️</span>
+        <div class="feature-title">Truly Unlimited</div>
+        <div class="feature-desc">No file size caps, no page limits, no daily quotas. Merge 100 PDFs or edit a 500-page document — no restrictions.</div>
+      </div>
+      <div class="feature-item">
+        <span class="feature-emoji">⚡</span>
+        <div class="feature-title">Instant Results</div>
+        <div class="feature-desc">No uploading and waiting. Your computer does all the work, so results are immediate — even for large files.</div>
+      </div>
+      <div class="feature-item">
+        <span class="feature-emoji">🎨</span>
+        <div class="feature-title">Smart Color Match</div>
+        <div class="feature-desc">Our erase tool samples the exact background color under your selection, making deletions invisible — not painted white.</div>
+      </div>
+      <div class="feature-item">
+        <span class="feature-emoji">📱</span>
+        <div class="feature-title">Works Everywhere</div>
+        <div class="feature-desc">Fully responsive on phones, tablets, and desktops. Touch-friendly tools designed for real mobile use.</div>
+      </div>
+      <div class="feature-item">
+        <span class="feature-emoji">🆓</span>
+        <div class="feature-title">Free Forever</div>
+        <div class="feature-desc">No freemium trap. No hidden paid tiers. No watermarks. No credit card. Just free PDF tools for everyone.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── HOW IT WORKS ── -->
+<section class="how-section" id="how">
+  <div style="max-width:1200px;margin:0 auto;text-align:center">
+    <div class="section-label" style="justify-content:center">How it works</div>
+    <div class="section-title">Three steps, done</div>
+    <div class="section-sub" style="margin:0 auto">No account. No learning curve. Just open, edit, download.</div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">01</div>
+        <div class="step-title">Open your PDF</div>
+        <div class="step-desc">Drag & drop your PDF file or tap to browse. It loads instantly in your browser.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <div class="step-title">Edit or merge</div>
+        <div class="step-desc">Use any tool — erase areas, add text, merge files, redact content, manage pages.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <div class="step-title">Download</div>
+        <div class="step-desc">Click download and your edited PDF saves directly to your device. Done.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── PRIVACY BANNER ── -->
+<div class="privacy-banner">
+  <div class="privacy-text">
+    <h3>Your files are yours alone.</h3>
+    <p>We built FlowPDF on a simple principle: your documents are private. We have no servers, no database, no file storage. Technically, we cannot see your files even if we wanted to.</p>
+    <div class="privacy-badges">
+      <span class="priv-badge">✓ No server uploads</span>
+      <span class="priv-badge">✓ No data collection</span>
+      <span class="priv-badge">✓ No cookies</span>
+      <span class="priv-badge">✓ No account needed</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── FAQ ── -->
+<section class="faq-section" id="faq">
+  <div style="max-width:700px;margin:0 auto;text-align:center">
+    <div class="section-label" style="justify-content:center">FAQ</div>
+    <div class="section-title">Questions answered</div>
+  </div>
+  <div class="faq-grid">
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">Is FlowPDF really free? <span class="faq-arrow">+</span></div>
+      <div class="faq-a">Yes, completely. There are no paid plans, no premium features, no watermarks, and no credit card required. All tools are free to use as many times as you want.</div>
+    </div>
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">Are my files safe? <span class="faq-arrow">+</span></div>
+      <div class="faq-a">Absolutely. Your files never leave your device. All processing is done locally in your browser using JavaScript (pdf-lib and PDF.js). We have no servers that receive your files.</div>
+    </div>
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">How does the Smart Color Erase work? <span class="faq-arrow">+</span></div>
+      <div class="faq-a">When you select an area to erase, FlowPDF samples the pixel color at the center of your selection. It then fills the erased area with that exact color — making the deletion invisible rather than leaving a white box.</div>
+    </div>
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">Is there a file size or page limit? <span class="faq-arrow">+</span></div>
+      <div class="faq-a">No limits. You can merge as many PDFs as you want and edit documents of any size. The only constraint is your device's available memory, which is rarely an issue for normal PDFs.</div>
+    </div>
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">Does it work on mobile? <span class="faq-arrow">+</span></div>
+      <div class="faq-a">Yes. Both the PDF Merger and PDF Editor are fully touch-friendly and work on iPhones, Android phones, and tablets. The editor supports touch drawing and touch selection.</div>
+    </div>
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">Can I edit password-protected PDFs? <span class="faq-arrow">+</span></div>
+      <div class="faq-a">FlowPDF attempts to open encrypted PDFs with the ignoreEncryption flag, which works for some lightly protected files. Strongly password-protected PDFs will require the password to be removed first by the document owner.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── CTA ── -->
+<section class="cta-section">
+  <div class="cta-card">
+    <h2>Start editing <em>right now</em></h2>
+    <p>No account. No download. No fee. Just open your PDF and get to work.</p>
+    <div class="cta-btns">
+      <a href="pdf-merger.html" class="btn-hero-primary">📄 Merge PDFs →</a>
+      <a href="pdf-editor-pro.html" class="btn-hero-secondary">✂️ Edit PDFs →</a>
+      <a href="pdf-resize.html" class="btn-hero-secondary">📐 Resize PDFs →</a>
+    </div>
+  </div>
+</section>
+
+<!-- ── FOOTER ── */
+<footer>
+  <div class="footer-top">
+    <div class="footer-brand">
+      <a href="#" class="footer-brand-logo">
+        <div class="footer-logo-mark">⚡</div>
+        <span class="footer-brand-name">Flow<span>PDF</span></span>
+      </a>
+      <p class="footer-tagline">Free PDF tools that respect your privacy. No uploads. No accounts. No nonsense.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Tools</h4>
+      <a href="pdf-merger.html">PDF Merger</a>
+      <a href="pdf-editor-pro.html">PDF Editor Pro</a>
+      <a href="pdf-resize.html">PDF Resizer</a>
+    </div>
+    <div class="footer-col">
+      <h4>Features</h4>
+      <a href="pdf-editor-pro.html">Smart Color Erase</a>
+      <a href="pdf-editor-pro.html">Add Text & Draw</a>
+      <a href="pdf-editor-pro.html">Redact Content</a>
+      <a href="pdf-resize.html">Resize to A4 / Letter</a>
+      <a href="pdf-resize.html">Custom Dimensions</a>
+      <a href="pdf-merger.html">Sort & Merge</a>
+    </div>
+    <div class="footer-col">
+      <h4>Privacy</h4>
+      <a href="#">No uploads</a>
+      <a href="#">No data stored</a>
+      <a href="#">No tracking</a>
+      <a href="#">Open source libs</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span class="footer-copy">© 2026 FlowPDF. All rights reserved.</span>
+    <span class="footer-made">Built with <span>♥</span> using pdf-lib & PDF.js</span>
+  </div>
+</footer>
+
+<script>
+function toggleFaq(el){
+  const isOpen=el.classList.contains('open');
+  document.querySelectorAll('.faq-item').forEach(f=>f.classList.remove('open'));
+  if(!isOpen)el.classList.add('open');
+}
+
+// Scroll reveal
+const observer=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      e.target.style.opacity='1';
+      e.target.style.transform='translateY(0)';
+    }
+  });
+},{threshold:0.1});
+
+document.querySelectorAll('.tool-card,.feature-item,.step,.faq-item').forEach(el=>{
+  el.style.opacity='0';
+  el.style.transform='translateY(20px)';
+  el.style.transition='opacity 0.5s ease, transform 0.5s ease';
+  observer.observe(el);
+});
+</script>
+</body>
+</html>

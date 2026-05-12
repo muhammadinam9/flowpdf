@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ResizeFlow — Advanced PDF Resizer</title>
+<link href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f7f5f0;
+  --bg2:#eeebe3;
+  --surface:#ffffff;
+  --card:#fdfcf9;
+  --border:#e0dbd0;
+  --border2:#ccc8bc;
+  --ink:#1a1812;
+  --ink2:#6b6555;
+  --ink3:#9c9585;
+  --accent:#1a56db;
+  --accent-light:rgba(26,86,219,0.08);
+  --accent-border:rgba(26,86,219,0.2);
+  --green:#0f9d58;
+  --green-light:rgba(15,157,88,0.08);
+  --red:#d93025;
+  --red-light:rgba(217,48,37,0.08);
+  --orange:#e37400;
+  --orange-light:rgba(227,116,0,0.08);
+  --r:10px;
+  --r-lg:16px;
+  --shadow:0 1px 4px rgba(26,24,18,0.08),0 2px 12px rgba(26,24,18,0.04);
+  --shadow-lg:0 4px 24px rgba(26,24,18,0.1),0 1px 4px rgba(26,24,18,0.06);
+}
+
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--ink);font-family:'Familjen Grotesk',sans-serif;display:flex;flex-direction:column}
+
+/* ── TOPBAR ── */
+.topbar{
+  height:56px;background:var(--surface);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:12px;padding:0 20px;
+  flex-shrink:0;box-shadow:var(--shadow);position:relative;z-index:50;
+}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;flex-shrink:0}
+.logo-mark{
+  width:34px;height:34px;border-radius:9px;
+  background:linear-gradient(135deg,#1a56db,#1e40af);
+  display:flex;align-items:center;justify-content:center;font-size:16px;
+  box-shadow:0 2px 8px rgba(26,86,219,0.3);
+}
+.logo-name{font-size:17px;font-weight:700;color:var(--ink);letter-spacing:-0.03em}
+.logo-name span{color:var(--accent)}
+.topbar-divider{width:1px;height:28px;background:var(--border);flex-shrink:0}
+.file-pill{
+  display:flex;align-items:center;gap:8px;
+  background:var(--bg);border:1px solid var(--border);
+  border-radius:999px;padding:5px 12px;font-size:13px;color:var(--ink2);
+  max-width:260px;
+}
+.file-pill-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
+.topbar-right{margin-left:auto;display:flex;gap:8px;align-items:center}
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  border:1px solid var(--border);background:var(--surface);color:var(--ink);
+  padding:7px 16px;border-radius:8px;font-size:13px;font-weight:600;
+  cursor:pointer;transition:all 0.15s;font-family:inherit;white-space:nowrap;
+}
+.btn:hover{background:var(--bg);border-color:var(--border2)}
+.btn:disabled{opacity:0.4;cursor:not-allowed}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 2px 8px rgba(26,86,219,0.25)}
+.btn.primary:hover{background:#1648c0;box-shadow:0 4px 16px rgba(26,86,219,0.35)}
+.btn.green{background:var(--green);border-color:var(--green);color:#fff;box-shadow:0 2px 8px rgba(15,157,88,0.25)}
+.btn.green:hover{background:#0d8a4e}
+
+/* ── LAYOUT ── */
+.app{display:flex;flex:1;overflow:hidden}
+
+/* ── LEFT PANEL ── */
+.left-panel{
+  width:320px;flex-shrink:0;background:var(--surface);
+  border-right:1px solid var(--border);overflow-y:auto;
+  display:flex;flex-direction:column;
+}
+.left-panel::-webkit-scrollbar{width:5px}
+.left-panel::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+.panel-sec{padding:16px;border-bottom:1px solid var(--border)}
+.panel-sec:last-child{border-bottom:none}
+.sec-title{
+  font-size:11px;font-weight:700;text-transform:uppercase;
+  letter-spacing:0.1em;color:var(--ink3);margin-bottom:12px;
+  display:flex;align-items:center;gap:8px;
+}
+.sec-title::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* File info card */
+.file-info-card{
+  background:var(--bg);border:1px solid var(--border);border-radius:var(--r);
+  padding:12px;display:flex;flex-direction:column;gap:6px;
+}
+.info-row{display:flex;justify-content:space-between;align-items:center}
+.info-label{font-size:12px;color:var(--ink3)}
+.info-val{font-size:12px;font-weight:600;font-family:'Geist Mono',monospace;color:var(--ink)}
+.info-val.warn{color:var(--orange)}
+.info-val.danger{color:var(--red)}
+.info-val.good{color:var(--green)}
+
+/* Page selector */
+.page-scope-tabs{display:flex;gap:4px;background:var(--bg);border-radius:9px;padding:3px}
+.scope-tab{
+  flex:1;padding:7px 4px;text-align:center;border-radius:7px;
+  font-size:12px;font-weight:600;cursor:pointer;transition:all 0.15s;
+  border:none;background:transparent;color:var(--ink3);font-family:inherit;
+}
+.scope-tab.active{background:var(--surface);color:var(--accent);box-shadow:var(--shadow)}
+.page-range-input{
+  display:none;margin-top:8px;
+  background:var(--bg);border:1px solid var(--border);border-radius:8px;
+  padding:8px 10px;font-size:13px;font-family:'Geist Mono',monospace;
+  color:var(--ink);outline:none;width:100%;transition:border-color 0.15s;
+}
+.page-range-input:focus{border-color:var(--accent)}
+.page-range-input.show{display:block}
+.range-hint{font-size:11px;color:var(--ink3);margin-top:4px}
+
+/* Preset sizes */
+.presets-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px}
+.preset-btn{
+  padding:8px 4px;border-radius:8px;border:1px solid var(--border);
+  background:var(--card);text-align:center;cursor:pointer;transition:all 0.15s;
+  font-family:inherit;
+}
+.preset-btn:hover{border-color:var(--accent);background:var(--accent-light)}
+.preset-btn.active{border-color:var(--accent);background:var(--accent-light);color:var(--accent)}
+.preset-name{font-size:12px;font-weight:700;display:block;margin-bottom:2px}
+.preset-dims{font-size:10px;color:var(--ink3);font-family:'Geist Mono',monospace;display:block}
+.preset-btn.active .preset-dims{color:var(--accent);opacity:0.7}
+
+/* Orientation */
+.orient-row{display:flex;gap:8px}
+.orient-btn{
+  flex:1;padding:10px;border-radius:9px;border:1px solid var(--border);
+  background:var(--card);cursor:pointer;text-align:center;transition:all 0.15s;
+  font-family:inherit;
+}
+.orient-btn:hover{border-color:var(--accent);background:var(--accent-light)}
+.orient-btn.active{border-color:var(--accent);background:var(--accent-light)}
+.orient-icon{font-size:22px;display:block;margin-bottom:4px}
+.orient-label{font-size:12px;font-weight:600;color:var(--ink2)}
+.orient-btn.active .orient-label{color:var(--accent)}
+
+/* Custom dimensions */
+.dim-row{display:flex;gap:8px;align-items:center}
+.dim-field{display:flex;flex-direction:column;gap:4px;flex:1}
+.dim-label{font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:0.05em}
+.dim-input{
+  background:var(--bg);border:1px solid var(--border);border-radius:8px;
+  padding:8px 10px;font-size:14px;font-weight:600;
+  font-family:'Geist Mono',monospace;color:var(--ink);
+  outline:none;transition:border-color 0.15s;width:100%;
+}
+.dim-input:focus{border-color:var(--accent);background:#fff}
+.dim-sep{font-size:16px;color:var(--ink3);font-weight:300;flex-shrink:0;padding-top:18px}
+
+/* Unit selector */
+.unit-tabs{display:flex;gap:4px;background:var(--bg);border-radius:8px;padding:3px}
+.unit-tab{
+  flex:1;padding:6px;text-align:center;border-radius:6px;
+  font-size:12px;font-weight:700;cursor:pointer;transition:all 0.15s;
+  border:none;background:transparent;color:var(--ink3);font-family:inherit;
+  font-family:'Geist Mono',monospace;
+}
+.unit-tab.active{background:var(--surface);color:var(--accent);box-shadow:var(--shadow)}
+
+/* Content fit */
+.fit-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.fit-btn{
+  padding:10px 8px;border-radius:9px;border:1px solid var(--border);
+  background:var(--card);cursor:pointer;transition:all 0.15s;font-family:inherit;
+  text-align:left;
+}
+.fit-btn:hover{border-color:var(--accent);background:var(--accent-light)}
+.fit-btn.active{border-color:var(--accent);background:var(--accent-light)}
+.fit-icon{font-size:18px;display:block;margin-bottom:4px}
+.fit-name{font-size:12px;font-weight:700;color:var(--ink);display:block}
+.fit-desc{font-size:10px;color:var(--ink3);display:block;margin-top:1px;line-height:1.3}
+.fit-btn.active .fit-name{color:var(--accent)}
+
+/* Margin */
+.margin-row{display:flex;gap:8px;align-items:center}
+.margin-label{font-size:12px;color:var(--ink3);min-width:48px}
+input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer}
+.margin-val{font-size:12px;font-weight:700;font-family:'Geist Mono',monospace;color:var(--accent);min-width:36px;text-align:right}
+
+/* BG color */
+.bg-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.bg-swatch{width:28px;height:28px;border-radius:6px;cursor:pointer;border:2px solid transparent;transition:all 0.12s;flex-shrink:0}
+.bg-swatch:hover,.bg-swatch.active{border-color:var(--ink);transform:scale(1.1)}
+.bg-swatch.checkered{background-image:repeating-conic-gradient(#ccc 0% 25%,#fff 0% 50%);background-size:10px 10px}
+input[type=color].bg-color{width:28px;height:28px;border-radius:6px;border:2px solid var(--border);cursor:pointer;padding:1px}
+
+/* Apply button */
+.btn-apply{
+  width:100%;padding:14px;background:var(--accent);color:#fff;border:none;
+  border-radius:var(--r);font-size:15px;font-weight:700;cursor:pointer;
+  font-family:inherit;transition:all 0.2s;
+  box-shadow:0 4px 16px rgba(26,86,219,0.3);
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.btn-apply:hover{background:#1648c0;transform:translateY(-1px);box-shadow:0 6px 24px rgba(26,86,219,0.4)}
+.btn-apply:active{transform:translateY(0)}
+.btn-apply:disabled{opacity:0.4;cursor:not-allowed;transform:none}
+
+/* Undo/redo */
+.history-row{display:flex;gap:6px}
+.btn-hist{
+  flex:1;padding:8px;border:1px solid var(--border);background:var(--card);
+  border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;
+  font-family:inherit;color:var(--ink2);transition:all 0.15s;
+  display:flex;align-items:center;justify-content:center;gap:5px;
+}
+.btn-hist:hover:not(:disabled){background:var(--bg);border-color:var(--border2)}
+.btn-hist:disabled{opacity:0.3;cursor:not-allowed}
+
+/* ── CANVAS AREA ── */
+.canvas-area{
+  flex:1;overflow:auto;display:flex;flex-direction:column;
+  background:var(--bg2);position:relative;
+}
+.canvas-area::-webkit-scrollbar{width:8px;height:8px}
+.canvas-area::-webkit-scrollbar-track{background:var(--bg2)}
+.canvas-area::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+
+/* Page nav bar */
+.page-nav{
+  background:var(--surface);border-bottom:1px solid var(--border);
+  padding:8px 16px;display:flex;align-items:center;gap:10px;
+  flex-shrink:0;box-shadow:0 1px 4px rgba(26,24,18,0.04);
+}
+.nav-btn{
+  width:30px;height:30px;border-radius:7px;border:1px solid var(--border);
+  background:var(--card);color:var(--ink2);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;font-size:13px;
+  transition:all 0.15s;flex-shrink:0;
+}
+.nav-btn:hover:not(:disabled){background:var(--bg);border-color:var(--border2);color:var(--ink)}
+.nav-btn:disabled{opacity:0.3;cursor:not-allowed}
+.page-info{font-size:13px;font-weight:600;color:var(--ink2);font-family:'Geist Mono',monospace}
+.zoom-group{margin-left:auto;display:flex;align-items:center;gap:6px}
+.zoom-label{font-size:12px;font-weight:700;font-family:'Geist Mono',monospace;color:var(--ink3);min-width:40px;text-align:center}
+
+/* Preview area */
+.preview-area{
+  flex:1;display:flex;gap:32px;padding:32px;
+  align-items:flex-start;justify-content:center;
+  flex-wrap:wrap;
+}
+.preview-block{display:flex;flex-direction:column;align-items:center;gap:10px}
+.preview-label{
+  font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;
+  color:var(--ink3);
+}
+.preview-label.accent{color:var(--accent)}
+.canvas-shadow{
+  box-shadow:0 4px 24px rgba(26,24,18,0.15),0 1px 4px rgba(26,24,18,0.08);
+  border-radius:3px;position:relative;
+}
+canvas{display:block;border-radius:3px;max-width:100%}
+.preview-dims-tag{
+  font-size:11px;font-family:'Geist Mono',monospace;font-weight:600;
+  color:var(--ink3);background:var(--surface);border:1px solid var(--border);
+  padding:3px 8px;border-radius:999px;
+}
+.preview-dims-tag.accent{color:var(--accent);border-color:var(--accent-border);background:var(--accent-light)}
+
+/* Arrow between previews */
+.preview-arrow{
+  font-size:28px;color:var(--border2);align-self:center;
+  flex-shrink:0;padding-top:40px;
+}
+
+/* Page list sidebar */
+.pages-sidebar{
+  width:100px;flex-shrink:0;background:var(--surface);
+  border-left:1px solid var(--border);overflow-y:auto;
+  display:flex;flex-direction:column;padding:8px;gap:6px;
+}
+.pages-sidebar::-webkit-scrollbar{width:3px}
+.pages-sidebar::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.thumb-item{
+  border:2px solid transparent;border-radius:8px;cursor:pointer;
+  overflow:hidden;transition:all 0.15s;background:var(--bg);
+  display:flex;flex-direction:column;align-items:center;gap:4px;padding:4px;
+}
+.thumb-item:hover{border-color:var(--border2)}
+.thumb-item.active{border-color:var(--accent)}
+.thumb-canvas{width:80px;height:100px;object-fit:contain;border-radius:4px;background:#fff;display:block}
+.thumb-num{font-size:10px;font-weight:700;color:var(--ink3);font-family:'Geist Mono',monospace}
+.thumb-item.active .thumb-num{color:var(--accent)}
+
+/* ── UPLOAD SCREEN ── */
+#uploadScreen{
+  position:fixed;inset:0;background:var(--bg);
+  display:flex;align-items:center;justify-content:center;z-index:200;padding:20px;
+}
+.upload-wrap{max-width:560px;width:100%;text-align:center}
+.upload-logo{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:32px}
+.upload-logo-mark{width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#1a56db,#1e40af);display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 4px 16px rgba(26,86,219,0.3)}
+.upload-logo-name{font-size:26px;font-weight:700;letter-spacing:-0.04em}
+.upload-logo-name span{color:var(--accent)}
+.upload-drop{
+  border:2px dashed var(--border2);border-radius:20px;padding:56px 32px;
+  cursor:pointer;transition:all 0.2s;background:var(--surface);margin-bottom:24px;
+}
+.upload-drop:hover,.upload-drop.over{border-color:var(--accent);background:var(--accent-light);transform:translateY(-2px);box-shadow:var(--shadow-lg)}
+.drop-icon{font-size:52px;display:block;margin-bottom:16px;animation:bob 3s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.upload-drop h2{font-size:22px;font-weight:700;margin-bottom:8px;color:var(--ink)}
+.upload-drop p{font-size:14px;color:var(--ink2)}
+.upload-chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.chip{background:var(--surface);border:1px solid var(--border);border-radius:999px;padding:5px 12px;font-size:12px;font-weight:600;color:var(--ink2)}
+#fileInput{display:none}
+
+/* ── SIZE WARNING ── */
+.size-warning{
+  display:none;margin-bottom:8px;padding:10px 12px;border-radius:9px;
+  font-size:12px;font-weight:600;line-height:1.4;
+}
+.size-warning.show{display:flex;align-items:flex-start;gap:8px}
+.size-warning.orange{background:var(--orange-light);border:1px solid rgba(227,116,0,0.2);color:var(--orange)}
+.size-warning.red{background:var(--red-light);border:1px solid rgba(217,48,37,0.2);color:var(--red)}
+
+/* ── LOADING ── */
+#loading{position:fixed;inset:0;background:rgba(247,245,240,0.85);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;z-index:300}
+#loading.show{display:flex}
+.loading-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:32px 40px;text-align:center;box-shadow:var(--shadow-lg)}
+.spinner{width:36px;height:36px;border:3px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite;margin:0 auto 14px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-title{font-size:16px;font-weight:700;margin-bottom:4px}
+.loading-sub{font-size:13px;color:var(--ink3)}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:20px;right:20px;background:var(--ink);color:#fff;padding:10px 18px;border-radius:9px;font-size:13px;font-weight:600;box-shadow:var(--shadow-lg);z-index:400;opacity:0;transform:translateY(8px);transition:all 0.25s;pointer-events:none}
+#toast.show{opacity:1;transform:translateY(0)}
+#toast.green{background:var(--green)}
+#toast.red{background:var(--red)}
+
+@media(max-width:768px){
+  .left-panel{width:100%;max-height:50vh}
+  .app{flex-direction:column}
+  .pages-sidebar{display:none}
+  .preview-area{padding:16px;gap:16px}
+  .preview-arrow{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- UPLOAD -->
+<div id="uploadScreen">
+  <div class="upload-wrap">
+    <div class="upload-logo">
+      <div class="upload-logo-mark">📐</div>
+      <span class="upload-logo-name">Resize<span>Flow</span></span>
+    </div>
+    <div class="upload-drop" id="uploadDrop" onclick="document.getElementById('fileInput').click()">
+      <span class="drop-icon">📄</span>
+      <h2>Drop your PDF to resize</h2>
+      <p>Choose any PDF — all pages, dimensions, and file size shown instantly</p>
+    </div>
+    <div class="upload-chips">
+      <span class="chip">📐 8 preset sizes</span>
+      <span class="chip">📏 Custom dimensions</span>
+      <span class="chip">🔄 Fit / Fill / Stretch</span>
+      <span class="chip">📊 Live size info</span>
+      <span class="chip">↩️ Undo / Redo</span>
+      <span class="chip">🔒 100% Private</span>
+    </div>
+    <input type="file" id="fileInput" accept=".pdf,application/pdf">
+  </div>
+</div>
+
+<!-- TOPBAR -->
+<div class="topbar" id="topbar" style="display:none">
+  <a href="#" class="logo" onclick="location.reload()">
+    <div class="logo-mark">📐</div>
+    <span class="logo-name">Resize<span>Flow</span></span>
+  </a>
+  <div class="topbar-divider"></div>
+  <div class="file-pill">
+    <span>📄</span>
+    <span class="file-pill-name" id="topFileName">file.pdf</span>
+  </div>
+  <div class="topbar-right">
+    <button class="btn" onclick="document.getElementById('fileInput').click()">📂 Open</button>
+    <button class="btn primary" id="undoBtn" onclick="undo()" disabled>↩ Undo</button>
+    <button class="btn primary" id="redoBtn" onclick="redo()" disabled>↪ Redo</button>
+    <button class="btn green" id="saveBtn" onclick="savePDF()">⬇ Download PDF</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app" id="app" style="display:none">
+
+  <!-- LEFT PANEL -->
+  <div class="left-panel">
+
+    <!-- File Info -->
+    <div class="panel-sec">
+      <div class="sec-title">File Info</div>
+      <div class="file-info-card">
+        <div class="info-row"><span class="info-label">File size</span><span class="info-val" id="infoFileSize">—</span></div>
+        <div class="info-row"><span class="info-label">Pages</span><span class="info-val" id="infoPages">—</span></div>
+        <div class="info-row"><span class="info-label">Current page size</span><span class="info-val" id="infoCurSize">—</span></div>
+        <div class="info-row"><span class="info-label">After resize</span><span class="info-val good" id="infoAfterSize">—</span></div>
+        <div class="info-row"><span class="info-label">Est. output size</span><span class="info-val" id="infoEstOutput">—</span></div>
+      </div>
+      <!-- File size warning -->
+      <div class="size-warning" id="sizeWarning"></div>
+    </div>
+
+    <!-- Apply To -->
+    <div class="panel-sec">
+      <div class="sec-title">Apply To</div>
+      <div class="page-scope-tabs">
+        <button class="scope-tab active" onclick="setScope('all',this)">All Pages</button>
+        <button class="scope-tab" onclick="setScope('current',this)">This Page</button>
+        <button class="scope-tab" onclick="setScope('range',this)">Range</button>
+      </div>
+      <input class="page-range-input" id="rangeInput" placeholder="e.g. 1-3, 5, 7-9" oninput="updatePreview()">
+      <div class="range-hint" id="rangeHint" style="display:none">Enter page numbers separated by commas</div>
+    </div>
+
+    <!-- Preset Sizes -->
+    <div class="panel-sec">
+      <div class="sec-title">Preset Sizes</div>
+      <div class="presets-grid" id="presetsGrid"></div>
+    </div>
+
+    <!-- Orientation -->
+    <div class="panel-sec">
+      <div class="sec-title">Orientation</div>
+      <div class="orient-row">
+        <button class="orient-btn active" id="orientPort" onclick="setOrientation('portrait',this)">
+          <span class="orient-icon">▯</span>
+          <span class="orient-label">Portrait</span>
+        </button>
+        <button class="orient-btn" id="orientLand" onclick="setOrientation('landscape',this)">
+          <span class="orient-icon">▭</span>
+          <span class="orient-label">Landscape</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Custom Dimensions -->
+    <div class="panel-sec">
+      <div class="sec-title">Custom Dimensions</div>
+      <div style="margin-bottom:8px">
+        <div class="unit-tabs">
+          <button class="unit-tab active" onclick="setUnit('mm',this)">mm</button>
+          <button class="unit-tab" onclick="setUnit('cm',this)">cm</button>
+          <button class="unit-tab" onclick="setUnit('in',this)">in</button>
+          <button class="unit-tab" onclick="setUnit('px',this)">px</button>
+          <button class="unit-tab" onclick="setUnit('pt',this)">pt</button>
+        </div>
+      </div>
+      <div class="dim-row">
+        <div class="dim-field">
+          <span class="dim-label">Width</span>
+          <input class="dim-input" type="number" id="dimW" min="1" oninput="onCustomDim()">
+        </div>
+        <span class="dim-sep">×</span>
+        <div class="dim-field">
+          <span class="dim-label">Height</span>
+          <input class="dim-input" type="number" id="dimH" min="1" oninput="onCustomDim()">
+        </div>
+      </div>
+    </div>
+
+    <!-- Content Fit -->
+    <div class="panel-sec">
+      <div class="sec-title">Content Scaling</div>
+      <div class="fit-grid">
+        <button class="fit-btn active" data-fit="fit" onclick="setFit('fit',this)">
+          <span class="fit-icon">⊡</span>
+          <span class="fit-name">Fit</span>
+          <span class="fit-desc">Scale to fit, keep ratio</span>
+        </button>
+        <button class="fit-btn" data-fit="fill" onclick="setFit('fill',this)">
+          <span class="fit-icon">⊠</span>
+          <span class="fit-name">Fill</span>
+          <span class="fit-desc">Fill page, may crop</span>
+        </button>
+        <button class="fit-btn" data-fit="stretch" onclick="setFit('stretch',this)">
+          <span class="fit-icon">⤡</span>
+          <span class="fit-name">Stretch</span>
+          <span class="fit-desc">Stretch to exact size</span>
+        </button>
+        <button class="fit-btn" data-fit="center" onclick="setFit('center',this)">
+          <span class="fit-icon">⊹</span>
+          <span class="fit-name">Center</span>
+          <span class="fit-desc">Keep size, center on page</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Margin -->
+    <div class="panel-sec">
+      <div class="sec-title">Margin (padding)</div>
+      <div class="margin-row">
+        <span class="margin-label">Margin</span>
+        <input type="range" id="marginSlider" min="0" max="100" value="0" oninput="updateMarginLabel(this.value);updatePreview()">
+        <span class="margin-val" id="marginLabel">0 pt</span>
+      </div>
+    </div>
+
+    <!-- Background Color -->
+    <div class="panel-sec">
+      <div class="sec-title">Background Fill</div>
+      <div class="bg-row">
+        <div class="bg-swatch active" style="background:#ffffff" data-bg="white" onclick="setBg('white',this)" title="White"></div>
+        <div class="bg-swatch" style="background:#f5f5f0" data-bg="cream" onclick="setBg('cream',this)" title="Cream"></div>
+        <div class="bg-swatch" style="background:#000000" data-bg="black" onclick="setBg('black',this)" title="Black"></div>
+        <div class="bg-swatch" style="background:#1a56db" data-bg="blue" onclick="setBg('blue',this)" title="Blue"></div>
+        <div class="bg-swatch checkered" data-bg="transparent" onclick="setBg('transparent',this)" title="Transparent"></div>
+        <input type="color" class="bg-color" id="bgColorPicker" value="#ffffff" oninput="setBgCustom(this.value)" title="Custom color">
+      </div>
+    </div>
+
+    <!-- Apply -->
+    <div class="panel-sec">
+      <button class="btn-apply" id="applyBtn" onclick="applyResize()">
+        📐 Apply Resize
+      </button>
+      <div style="height:8px"></div>
+      <div class="history-row">
+        <button class="btn-hist" id="undoBtn2" onclick="undo()" disabled>↩ Undo</button>
+        <button class="btn-hist" id="redoBtn2" onclick="redo()" disabled>↪ Redo</button>
+      </div>
+    </div>
+
+  </div><!-- /left-panel -->
+
+  <!-- CENTER: PAGE NAV + PREVIEW -->
+  <div class="canvas-area">
+    <div class="page-nav">
+      <button class="nav-btn" id="prevBtn" onclick="changePage(-1)">◀</button>
+      <span class="page-info" id="pageInfo">Page 1 / 1</span>
+      <button class="nav-btn" id="nextBtn" onclick="changePage(1)">▶</button>
+      <div class="zoom-group">
+        <button class="nav-btn" onclick="adjustZoom(-0.1)">−</button>
+        <span class="zoom-label" id="zoomLabel">100%</span>
+        <button class="nav-btn" onclick="adjustZoom(0.1)">+</button>
+        <button class="nav-btn" onclick="fitZoom()" title="Fit to view">⊡</button>
+      </div>
+    </div>
+
+    <div class="preview-area" id="previewArea">
+      <!-- Before -->
+      <div class="preview-block">
+        <div class="preview-label">Original</div>
+        <div class="canvas-shadow">
+          <canvas id="beforeCanvas"></canvas>
+        </div>
+        <div class="preview-dims-tag" id="beforeDimsTag">—</div>
+      </div>
+
+      <div class="preview-arrow">→</div>
+
+      <!-- After -->
+      <div class="preview-block">
+        <div class="preview-label accent">After Resize</div>
+        <div class="canvas-shadow">
+          <canvas id="afterCanvas"></canvas>
+        </div>
+        <div class="preview-dims-tag accent" id="afterDimsTag">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: PAGE THUMBNAILS -->
+  <div class="pages-sidebar" id="pagesSidebar"></div>
+
+</div><!-- /app -->
+
+<!-- LOADING -->
+<div id="loading">
+  <div class="loading-card">
+    <div class="spinner"></div>
+    <div class="loading-title" id="loadTitle">Processing…</div>
+    <div class="loading-sub" id="loadSub">Please wait</div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+// ── PRESETS (in points: 1pt = 1/72 inch) ──
+const PRESETS={
+  'A4':    {w:595.28,h:841.89,label:'210×297mm'},
+  'A3':    {w:841.89,h:1190.55,label:'297×420mm'},
+  'A5':    {w:419.53,h:595.28,label:'148×210mm'},
+  'A6':    {w:297.64,h:419.53,label:'105×148mm'},
+  'Letter':{w:612,h:792,label:'8.5×11in'},
+  'Legal': {w:612,h:1008,label:'8.5×14in'},
+  'Tabloid':{w:792,h:1224,label:'11×17in'},
+  'B5':    {w:498.90,h:708.66,label:'176×250mm'},
+};
+
+// ── UNIT CONVERSIONS (to points) ──
+const TO_PT={mm:2.8346,cm:28.346,in:72,px:0.75,pt:1};
+const FROM_PT={mm:1/2.8346,cm:1/28.346,in:1/72,px:4/3,pt:1};
+
+// ── STATE ──
+let pdfLibDoc=null, pdfjsDoc=null;
+let currentPage=1, totalPages=0;
+let scale=1.2;
+let activePreset=null;
+let orientation='portrait';
+let unit='mm';
+let fitMode='fit';
+let margin=0;
+let bgColor={r:1,g:1,b:1};
+let bgType='white';
+let scope='all';
+let targetW=595.28, targetH=841.89; // in points
+let history=[], histIdx=-1;
+let origFileSize=0, origFileName='resized.pdf';
+
+// DOM
+const beforeCanvas=document.getElementById('beforeCanvas');
+const afterCanvas=document.getElementById('afterCanvas');
+const bc=beforeCanvas.getContext('2d');
+const ac=afterCanvas.getContext('2d');
+
+// ── FILE OPEN ──
+document.getElementById('fileInput').addEventListener('change',async e=>{
+  const f=e.target.files[0];
+  if(f)await openFile(f);
+  e.target.value='';
+});
+const uploadDrop=document.getElementById('uploadDrop');
+uploadDrop.addEventListener('dragover',e=>{e.preventDefault();uploadDrop.classList.add('over')});
+uploadDrop.addEventListener('dragleave',()=>uploadDrop.classList.remove('over'));
+uploadDrop.addEventListener('drop',async e=>{
+  e.preventDefault();uploadDrop.classList.remove('over');
+  const f=e.dataTransfer.files[0];
+  if(f&&(f.type==='application/pdf'||f.name.endsWith('.pdf')))await openFile(f);
+});
+
+async function openFile(file){
+  origFileSize=file.size;
+  origFileName=file.name.replace(/\.pdf$/i,'')+'_resized.pdf';
+  document.getElementById('topFileName').textContent=file.name;
+  showLoad('Loading PDF…','Reading your document');
+  try{
+    const buf=await file.arrayBuffer();
+    const u8=new Uint8Array(buf);
+    pdfLibDoc=await PDFLib.PDFDocument.load(u8,{ignoreEncryption:true});
+    totalPages=pdfLibDoc.getPageCount();
+    pdfjsDoc=await pdfjsLib.getDocument({data:u8.slice()}).promise;
+    history=[]; histIdx=-1;
+    await pushHistory('Opened');
+    currentPage=1;
+    showApp();
+    buildPresets();
+    await renderBoth();
+    buildThumbnails();
+    updateFileInfo();
+    checkFileSizeWarning(file.size);
+    toast('✓ PDF loaded — '+totalPages+' page'+(totalPages>1?'s':''));
+  }catch(e){hideLoad();toast('⚠ Could not open PDF',false,true);console.error(e)}
+  hideLoad();
+}
+
+function showApp(){
+  document.getElementById('uploadScreen').style.display='none';
+  document.getElementById('topbar').style.display='flex';
+  document.getElementById('app').style.display='flex';
+}
+
+// ── FILE SIZE WARNING ──
+function checkFileSizeWarning(bytes){
+  const el=document.getElementById('sizeWarning');
+  const mb=bytes/1048576;
+  if(mb>150){
+    el.className='size-warning red show';
+    el.innerHTML='⚠ Very large file ('+mb.toFixed(0)+'MB). May be slow on mobile or low-RAM devices. Use a desktop browser for best results.';
+  } else if(mb>50){
+    el.className='size-warning orange show';
+    el.innerHTML='⚠ Large file ('+mb.toFixed(0)+'MB). Processing may take a moment.';
+  } else {
+    el.className='size-warning';
+  }
+}
+
+// ── BUILD PRESETS ──
+function buildPresets(){
+  const grid=document.getElementById('presetsGrid');
+  grid.innerHTML='';
+  Object.entries(PRESETS).forEach(([name,p])=>{
+    const btn=document.createElement('button');
+    btn.className='preset-btn'+(name==='A4'?' active':'');
+    btn.innerHTML=`<span class="preset-name">${name}</span><span class="preset-dims">${p.label}</span>`;
+    btn.onclick=()=>selectPreset(name,btn);
+    grid.appendChild(btn);
+  });
+  selectPreset('A4',grid.querySelector('.active'));
+}
+
+function selectPreset(name,btn){
+  document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  activePreset=name;
+  const p=PRESETS[name];
+  targetW = orientation==='portrait'? Math.min(p.w,p.h) : Math.max(p.w,p.h);
+  targetH = orientation==='portrait'? Math.max(p.w,p.h) : Math.min(p.w,p.h);
+  syncDimInputs();
+  updatePreview();
+}
+
+// ── ORIENTATION ──
+function setOrientation(o,btn){
+  orientation=o;
+  document.querySelectorAll('.orient-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  // Swap if needed
+  const curW=parseFloat(document.getElementById('dimW').value)||targetW;
+  const curH=parseFloat(document.getElementById('dimH').value)||targetH;
+  const ptW=curW*TO_PT[unit], ptH=curH*TO_PT[unit];
+  if(o==='portrait'&&ptW>ptH){targetW=ptH;targetH=ptW}
+  else if(o==='landscape'&&ptH>ptW){targetW=ptH;targetH=ptW}
+  else{targetW=ptW;targetH=ptH}
+  syncDimInputs();
+  updatePreview();
+}
+
+// ── UNIT ──
+function setUnit(u,btn){
+  document.querySelectorAll('.unit-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  unit=u;
+  syncDimInputs();
+}
+
+function syncDimInputs(){
+  const w=(targetW*FROM_PT[unit]);
+  const h=(targetH*FROM_PT[unit]);
+  const dec=unit==='pt'||unit==='px'?0:2;
+  document.getElementById('dimW').value=w.toFixed(dec);
+  document.getElementById('dimH').value=h.toFixed(dec);
+  updateAfterTag();
+}
+
+function onCustomDim(){
+  activePreset=null;
+  document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('active'));
+  const w=parseFloat(document.getElementById('dimW').value)||0;
+  const h=parseFloat(document.getElementById('dimH').value)||0;
+  targetW=w*TO_PT[unit];
+  targetH=h*TO_PT[unit];
+  updateAfterTag();
+  updatePreview();
+}
+
+// ── FIT MODE ──
+function setFit(f,btn){
+  fitMode=f;
+  document.querySelectorAll('.fit-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  updatePreview();
+}
+
+// ── SCOPE ──
+function setScope(s,btn){
+  scope=s;
+  document.querySelectorAll('.scope-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const ri=document.getElementById('rangeInput');
+  const rh=document.getElementById('rangeHint');
+  ri.classList.toggle('show',s==='range');
+  rh.style.display=s==='range'?'block':'none';
+}
+
+// ── MARGIN ──
+function updateMarginLabel(v){
+  margin=parseFloat(v);
+  document.getElementById('marginLabel').textContent=v+' pt';
+}
+
+// ── BACKGROUND ──
+const BG_COLORS={white:{r:1,g:1,b:1},cream:{r:0.961,g:0.961,b:0.941},black:{r:0,g:0,b:0},blue:{r:0.102,g:0.337,b:0.855},transparent:{r:1,g:1,b:1}};
+function setBg(type,el){
+  document.querySelectorAll('.bg-swatch').forEach(s=>s.classList.remove('active'));
+  el.classList.add('active');
+  bgType=type;
+  bgColor=BG_COLORS[type]||{r:1,g:1,b:1};
+  updatePreview();
+}
+function setBgCustom(hex){
+  document.querySelectorAll('.bg-swatch').forEach(s=>s.classList.remove('active'));
+  bgColor=hexToRgb01(hex);bgType='custom';
+  updatePreview();
+}
+
+// ── RENDER BOTH PREVIEWS ──
+async function renderBoth(){
+  await renderBefore();
+  updatePreview();
+}
+
+async function renderBefore(){
+  if(!pdfjsDoc)return;
+  const page=await pdfjsDoc.getPage(currentPage);
+  const vp=page.getViewport({scale});
+  beforeCanvas.width=vp.width; beforeCanvas.height=vp.height;
+  await page.render({canvasContext:bc,viewport:vp}).promise;
+  // Dims tag
+  const pg=pdfLibDoc.getPage(currentPage-1);
+  const {width:pw,height:ph}=pg.getSize();
+  document.getElementById('beforeDimsTag').textContent=
+    ptToDisp(pw)+'×'+ptToDisp(ph)+' ('+Math.round(pw)+'×'+Math.round(ph)+' pt)';
+  document.getElementById('infoCurSize').textContent=ptToDisp(pw)+' × '+ptToDisp(ph);
+  updateAfterTag();
+}
+
+function updateAfterTag(){
+  if(!targetW||!targetH)return;
+  const tw=targetW, th=targetH;
+  document.getElementById('afterDimsTag').textContent=
+    ptToDisp(tw)+'×'+ptToDisp(th)+' ('+Math.round(tw)+'×'+Math.round(th)+' pt)';
+  document.getElementById('infoAfterSize').textContent=ptToDisp(tw)+' × '+ptToDisp(th);
+}
+
+function ptToDisp(pt){
+  const mm=pt/2.8346;
+  return mm.toFixed(1)+'mm';
+}
+
+function updatePreview(){
+  if(!beforeCanvas.width||!targetW||!targetH)return;
+  // Draw simulated "after" preview on afterCanvas
+  const tw=targetW, th=targetH;
+  const maxPx=280;
+  const previewScale=Math.min(maxPx/tw, maxPx/th, scale);
+  afterCanvas.width=Math.round(tw*previewScale);
+  afterCanvas.height=Math.round(th*previewScale);
+
+  // BG fill
+  ac.fillStyle=`rgb(${Math.round(bgColor.r*255)},${Math.round(bgColor.g*255)},${Math.round(bgColor.b*255)})`;
+  ac.fillRect(0,0,afterCanvas.width,afterCanvas.height);
+
+  // Draw content from beforeCanvas scaled per fitMode
+  const srcW=beforeCanvas.width, srcH=beforeCanvas.height;
+  const dstW=afterCanvas.width, dstH=afterCanvas.height;
+  const mg=margin*previewScale;
+
+  let dx=mg,dy=mg,dw=dstW-mg*2,dh=dstH-mg*2;
+
+  if(fitMode==='fit'){
+    const r=Math.min((dstW-mg*2)/srcW,(dstH-mg*2)/srcH);
+    dw=srcW*r; dh=srcH*r;
+    dx=(dstW-dw)/2; dy=(dstH-dh)/2;
+  } else if(fitMode==='fill'){
+    const r=Math.max((dstW-mg*2)/srcW,(dstH-mg*2)/srcH);
+    dw=srcW*r; dh=srcH*r;
+    dx=(dstW-dw)/2; dy=(dstH-dh)/2;
+  } else if(fitMode==='center'){
+    dw=srcW; dh=srcH;
+    dx=(dstW-dw)/2; dy=(dstH-dh)/2;
+  }
+  // stretch uses full area
+
+  ac.save();
+  ac.beginPath();
+  ac.rect(0,0,dstW,dstH);
+  ac.clip();
+  ac.drawImage(beforeCanvas,dx,dy,dw,dh);
+  ac.restore();
+
+  // Est output size
+  const ratio=(tw*th)/(beforeCanvas.width*beforeCanvas.height/scale/scale);
+  const est=origFileSize*ratio*(fitMode==='stretch'?1.05:0.95);
+  document.getElementById('infoEstOutput').textContent=fmtBytes(est);
+  updateAfterTag();
+}
+
+// ── FILE INFO ──
+function updateFileInfo(){
+  document.getElementById('infoFileSize').textContent=fmtBytes(origFileSize);
+  document.getElementById('infoPages').textContent=totalPages;
+  const iEl=document.getElementById('infoFileSize');
+  const mb=origFileSize/1048576;
+  iEl.className='info-val'+(mb>100?' danger':mb>30?' warn':' good');
+}
+
+// ── PAGE NAV ──
+async function changePage(d){
+  const n=currentPage+d;
+  if(n<1||n>totalPages)return;
+  currentPage=n;
+  document.getElementById('pageInfo').textContent='Page '+currentPage+' / '+totalPages;
+  document.getElementById('prevBtn').disabled=currentPage<=1;
+  document.getElementById('nextBtn').disabled=currentPage>=totalPages;
+  await renderBoth();
+  highlightThumb();
+}
+
+async function goPage(n){
+  currentPage=n;
+  document.getElementById('pageInfo').textContent='Page '+currentPage+' / '+totalPages;
+  document.getElementById('prevBtn').disabled=currentPage<=1;
+  document.getElementById('nextBtn').disabled=currentPage>=totalPages;
+  await renderBoth();
+  highlightThumb();
+}
+
+function adjustZoom(d){scale=Math.min(3,Math.max(0.3,scale+d));document.getElementById('zoomLabel').textContent=Math.round(scale*100)+'%';renderBoth()}
+function fitZoom(){scale=1;document.getElementById('zoomLabel').textContent='100%';renderBoth()}
+
+// ── THUMBNAILS ──
+async function buildThumbnails(){
+  const sb=document.getElementById('pagesSidebar');
+  sb.innerHTML='';
+  for(let i=1;i<=Math.min(totalPages,50);i++){
+    const wrap=document.createElement('div');
+    wrap.className='thumb-item'+(i===currentPage?' active':'');
+    wrap.onclick=()=>goPage(i);
+    const tc=document.createElement('canvas');
+    tc.className='thumb-canvas';
+    const tn=document.createElement('span');
+    tn.className='thumb-num';tn.textContent=i;
+    wrap.appendChild(tc);wrap.appendChild(tn);
+    sb.appendChild(wrap);
+    // Async render thumb
+    (async(idx,canvas)=>{
+      try{
+        const pg=await pdfjsDoc.getPage(idx);
+        const vp=pg.getViewport({scale:0.15});
+        canvas.width=vp.width;canvas.height=vp.height;
+        await pg.render({canvasContext:canvas.getContext('2d'),viewport:vp}).promise;
+      }catch(_){}
+    })(i,tc);
+  }
+}
+
+function highlightThumb(){
+  document.querySelectorAll('.thumb-item').forEach((el,i)=>{
+    el.classList.toggle('active',i+1===currentPage);
+  });
+}
+
+// ── APPLY RESIZE ──
+async function applyResize(){
+  if(!pdfLibDoc||!targetW||!targetH){toast('Set target dimensions first',false,true);return}
+  showLoad('Applying resize…','Processing pages');
+  await pushHistory('Before resize');
+  try{
+    const pages=getTargetPages();
+    for(const idx of pages){
+      const pg=pdfLibDoc.getPage(idx);
+      const {width:ow,height:oh}=pg.getSize();
+      const tw=targetW, th=targetH;
+      const mg=margin;
+
+      // Set new page size
+      pg.setSize(tw,th);
+
+      // Calculate content transform
+      let sx=1,sy=1,tx=0,ty=0;
+      const cw=tw-mg*2, ch=th-mg*2;
+      if(fitMode==='fit'){
+        const r=Math.min(cw/ow,ch/oh);
+        sx=sy=r; tx=(tw-ow*r)/2; ty=(th-oh*r)/2;
+      } else if(fitMode==='fill'){
+        const r=Math.max(cw/ow,ch/oh);
+        sx=sy=r; tx=(tw-ow*r)/2; ty=(th-oh*r)/2;
+      } else if(fitMode==='stretch'){
+        sx=cw/ow; sy=ch/oh; tx=mg; ty=mg;
+      } else if(fitMode==='center'){
+        sx=1;sy=1; tx=(tw-ow)/2; ty=(th-oh)/2;
+      }
+
+      // Draw BG rectangle
+      pg.drawRectangle({
+        x:0,y:0,width:tw,height:th,
+        color:PDFLib.rgb(bgColor.r,bgColor.g,bgColor.b),
+        borderWidth:0,
+      });
+
+      // Apply transform to existing content
+      pg.scaleContent(sx,sy);
+      pg.translateContent(tx/sx, ty/sy);
+    }
+
+    const saved=await pdfLibDoc.save();
+    history[histIdx]={bytes:saved,label:'Resized'};
+    pdfLibDoc=await PDFLib.PDFDocument.load(saved,{ignoreEncryption:true});
+    pdfjsDoc=await pdfjsLib.getDocument({data:saved.slice()}).promise;
+    await renderBoth();
+    buildThumbnails();
+    updateUndoRedo();
+    toast('✓ Resize applied to '+pages.length+' page'+(pages.length>1?'s':''));
+  }catch(e){toast('⚠ Error: '+e.message,false,true);console.error(e)}
+  hideLoad();
+}
+
+function getTargetPages(){
+  if(scope==='current')return[currentPage-1];
+  if(scope==='range'){
+    const raw=document.getElementById('rangeInput').value;
+    const pages=new Set();
+    raw.split(',').forEach(part=>{
+      part=part.trim();
+      if(part.includes('-')){
+        const [a,b]=part.split('-').map(Number);
+        for(let i=a;i<=b&&i<=totalPages;i++)pages.add(i-1);
+      } else {
+        const n=parseInt(part);
+        if(n>=1&&n<=totalPages)pages.add(n-1);
+      }
+    });
+    return[...pages].sort((a,b)=>a-b);
+  }
+  return Array.from({length:totalPages},(_,i)=>i);
+}
+
+// ── HISTORY ──
+async function pushHistory(label){
+  if(!pdfLibDoc)return;
+  const bytes=await pdfLibDoc.save();
+  if(histIdx<history.length-1)history=history.slice(0,histIdx+1);
+  history.push({bytes,label});
+  histIdx=history.length-1;
+  updateUndoRedo();
+}
+
+async function undo(){
+  if(histIdx<=0)return;
+  histIdx--;
+  await restoreHistory();
+}
+async function redo(){
+  if(histIdx>=history.length-1)return;
+  histIdx++;
+  await restoreHistory();
+}
+async function restoreHistory(){
+  showLoad('Restoring…','');
+  const {bytes}=history[histIdx];
+  pdfLibDoc=await PDFLib.PDFDocument.load(bytes,{ignoreEncryption:true});
+  pdfjsDoc=await pdfjsLib.getDocument({data:bytes.slice()}).promise;
+  totalPages=pdfLibDoc.getPageCount();
+  if(currentPage>totalPages)currentPage=totalPages;
+  await renderBoth();
+  buildThumbnails();
+  updateUndoRedo();
+  hideLoad();
+  toast(histIdx<history.length-1?'↩ Undo':'↪ Redo');
+}
+
+function updateUndoRedo(){
+  const u1=document.getElementById('undoBtn'),u2=document.getElementById('undoBtn2');
+  const r1=document.getElementById('redoBtn'),r2=document.getElementById('redoBtn2');
+  [u1,u2].forEach(b=>{if(b)b.disabled=histIdx<=0});
+  [r1,r2].forEach(b=>{if(b)b.disabled=histIdx>=history.length-1});
+}
+
+// ── SAVE ──
+async function savePDF(){
+  showLoad('Preparing download…','Saving your edits');
+  try{
+    const bytes=await pdfLibDoc.save();
+    const blob=new Blob([bytes],{type:'application/pdf'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download=origFileName;
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url),5000);
+    toast('✓ PDF downloaded! ('+fmtBytes(bytes.length)+')');
+  }catch(e){toast('⚠ Save error',false,true);console.error(e)}
+  hideLoad();
+}
+
+// ── KEYBOARD ──
+document.addEventListener('keydown',e=>{
+  if((e.ctrlKey||e.metaKey)&&e.key==='z'){e.preventDefault();e.shiftKey?redo():undo()}
+  if((e.ctrlKey||e.metaKey)&&e.key==='s'){e.preventDefault();savePDF()}
+  if(e.key==='ArrowLeft')changePage(-1);
+  if(e.key==='ArrowRight')changePage(1);
+});
+
+// ── UTILS ──
+function fmtBytes(b){
+  if(b<1024)return Math.round(b)+' B';
+  if(b<1048576)return(b/1024).toFixed(1)+' KB';
+  return(b/1048576).toFixed(2)+' MB';
+}
+function hexToRgb01(hex){
+  hex=hex.replace('#','');
+  if(hex.length===3)hex=hex.split('').map(c=>c+c).join('');
+  const n=parseInt(hex,16);
+  return{r:((n>>16)&255)/255,g:((n>>8)&255)/255,b:(n&255)/255};
+}
+
+let toastTimer;
+function toast(msg,isGreen=true,isRed=false){
+  const el=document.getElementById('toast');
+  el.textContent=msg;
+  el.className=isRed?'toast red show':isGreen?'toast green show':'toast show';
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>el.classList.remove('show'),3000);
+}
+function showLoad(t,s){
+  document.getElementById('loadTitle').textContent=t;
+  document.getElementById('loadSub').textContent=s;
+  document.getElementById('loading').classList.add('show');
+}
+function hideLoad(){document.getElementById('loading').classList.remove('show')}
+</script>
+</body>
+</html>
