@@ -838,6 +838,21 @@ body {
 }
 .refresh-btn:hover { background: rgba(255,255,255,0.1); }
 .refresh-btn.spinning { animation: spin 1s linear infinite; }
+.btn-load-week {
+  background: var(--green2);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 13px 20px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  width: 100%;
+  box-shadow: 0 4px 12px rgba(46,125,50,0.3);
+  transition: all 0.15s;
+}
+.btn-load-week:active  { transform: scale(0.98); }
+.btn-load-week:disabled { background: #9ca3af; box-shadow: none; }
 </style>
 </head>
 <body>
@@ -945,17 +960,27 @@ const CONFIG = {
       value="">
     <button class="btn-connect" onclick="saveConfig()">✓ Save & Connect</button>
   </div>
-  <div style="background:var(--card);border-radius:var(--radius);border:1px solid var(--border);padding:16px;font-size:13px;line-height:1.8;box-shadow:var(--shadow);">
+  <div style="background:var(--card);border-radius:var(--radius);border:1px solid var(--border);padding:16px;font-size:13px;line-height:1.8;box-shadow:var(--shadow);margin-bottom:14px">
     <strong style="color:var(--navy)">Connection Status</strong><br>
     <span id="conn-status" style="color:var(--muted)">Not configured</span>
     <br><br>
-    <strong style="color:var(--navy)">How to deploy</strong><br>
-    1. Open your Apps Script project<br>
-    2. Paste the <code>PASTE_INTO_APPS_SCRIPT.gs</code> content at the bottom<br>
-    3. Click Deploy → New Deployment<br>
-    4. Type: Web App · Execute as: Me · Access: Anyone<br>
-    5. Copy the URL and paste it above<br><br>
     <button style="background:var(--navy);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;" onclick="loadAll()">🔄 Refresh Data</button>
+  </div>
+
+  <div style="background:var(--card);border-radius:var(--radius);border:2px solid var(--green2);padding:16px;font-size:13px;line-height:1.6;box-shadow:var(--shadow);">
+    <strong style="color:var(--green2);font-size:15px">📥 Load New Week</strong><br>
+    <p style="color:var(--muted);margin:6px 0 14px;font-size:12px">
+      Run this after pasting new weekly data into the RawData sheet.<br>
+      It will: clear old corrections → format RawData → load all flagged records into Corrections.
+    </p>
+    <div style="background:#fff3cd;border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:#856404">
+      ⚠️ This will <strong>clear</strong> all existing corrections. Make sure you have already
+      built the Processed sheet for the previous week before running this.
+    </div>
+    <button class="btn-load-week" id="loadWeekBtn" onclick="loadNewWeek()">
+      📥 Load New Week Data
+    </button>
+    <div id="load-week-status" style="margin-top:10px;font-size:13px;display:none"></div>
   </div>
 </div>
 
@@ -1768,6 +1793,31 @@ function drawProcessedTable(data) {
         <tbody>${rows}</tbody>
       </table>
     </div>`;
+}
+
+// ── Load New Week ─────────────────────────────────────────
+async function loadNewWeek() {
+  const btn = document.getElementById('loadWeekBtn');
+  const status = document.getElementById('load-week-status');
+  btn.disabled = true;
+  btn.textContent = '⏳ Loading…';
+  status.style.display = 'block';
+  status.innerHTML = '<span style="color:var(--muted)">⏳ Clearing old data and loading flagged records…</span>';
+  try {
+    const res = await callAPI('loadNewWeek');
+    if (!res.ok) throw new Error(res.error);
+    status.innerHTML = `<span style="color:var(--green2)">✅ ${res.message}</span>`;
+    toast('✅ ' + res.message, 'success');
+    // Reload app data
+    await loadAll();
+    switchTab('manager');
+  } catch(e) {
+    status.innerHTML = `<span style="color:var(--red)">⚠️ ${e.message}</span>`;
+    toast('⚠️ Failed: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '📥 Load New Week Data';
+  }
 }
 
 // ── Refresh ───────────────────────────────────────────────
