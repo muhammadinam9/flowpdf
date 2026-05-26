@@ -2,754 +2,1702 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FlowPDF — Free PDF Tools, No Limits</title>
-<meta name="description" content="Free, unlimited PDF tools. Merge, edit, and resize PDFs with smart erase, text, draw, redact and more. 100% browser-based. No sign-up. No limits.">
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,400;12..96,500;12..96,700;12..96,800&family=Instrument+Serif:ital@0;1&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Employee Hours Corrections</title>
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#08080a;
-  --bg2:#0e0e12;
-  --surface:#141418;
-  --card:#1a1a20;
-  --card2:#212128;
-  --border:#28282f;
-  --border2:#35353f;
-  --text:#f2f2f8;
-  --muted:#7070a0;
-  --muted2:#404060;
-  --accent:#ff6b35;
-  --accent2:#7c6bff;
-  --accent3:#22d3a5;
-  --glow-orange:rgba(255,107,53,0.2);
-  --glow-purple:rgba(124,107,255,0.2);
-  --glow-teal:rgba(34,211,165,0.2);
+/* ── Reset & Tokens ─────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --navy:    #1a3a5c;
+  --navy2:   #0f2440;
+  --teal:    #0d7a6b;
+  --teal2:   #0a5c50;
+  --gold:    #e8a020;
+  --red:     #c0392b;
+  --green:   #1b5e20;
+  --green2:  #2e7d32;
+  --amber:   #f59e0b;
+  --bg:      #f0f2f5;
+  --card:    #ffffff;
+  --border:  #e0e4ea;
+  --text:    #1a1f2e;
+  --muted:   #6b7280;
+  --shadow:  0 2px 12px rgba(0,0,0,0.08);
+  --radius:  12px;
+  --font:    -apple-system, 'Segoe UI', system-ui, sans-serif;
 }
 
-html{scroll-behavior:smooth}
-body{
-  background:var(--bg);color:var(--text);
-  font-family:'Bricolage Grotesque',sans-serif;
-  overflow-x:hidden;line-height:1.6;
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* ── NOISE TEXTURE ── */
-body::before{
-  content:'';position:fixed;inset:0;
-  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-  pointer-events:none;z-index:0;opacity:0.6;
+/* ── Top Bar ────────────────────────────────────────────── */
+.topbar {
+  background: var(--navy);
+  color: #fff;
+  padding: 0 16px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+.topbar-logo { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; flex: 1; }
+.topbar-logo span { color: var(--gold); }
+.topbar-badge {
+  background: var(--red);
+  color: #fff;
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 12px;
+  font-weight: 600;
 }
 
-/* ── NAV ── */
-nav{
-  position:fixed;top:0;left:0;right:0;z-index:100;
-  padding:0 clamp(20px,5vw,60px);height:64px;
-  display:flex;align-items:center;justify-content:space-between;
-  background:rgba(8,8,10,0.8);backdrop-filter:blur(20px);
-  border-bottom:1px solid rgba(255,255,255,0.04);
+/* ── Tab Nav ────────────────────────────────────────────── */
+.tabnav {
+  display: flex;
+  background: var(--navy2);
+  border-bottom: 2px solid rgba(255,255,255,0.08);
 }
-.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none}
-.nav-logo-mark{
-  width:36px;height:36px;border-radius:10px;
-  background:linear-gradient(135deg,var(--accent),#ff9a5c);
-  display:flex;align-items:center;justify-content:center;font-size:18px;
-  box-shadow:0 0 20px var(--glow-orange);
+.tab {
+  flex: 1;
+  padding: 12px 8px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.55);
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s;
+  letter-spacing: 0.3px;
+  user-select: none;
 }
-.nav-logo-name{
-  font-size:20px;font-weight:800;letter-spacing:-0.04em;color:var(--text);
-}
-.nav-logo-name span{color:var(--accent)}
-.nav-links{display:flex;align-items:center;gap:6px}
-.nav-link{
-  color:var(--muted);font-size:14px;font-weight:500;text-decoration:none;
-  padding:7px 14px;border-radius:8px;transition:all 0.15s;
-}
-.nav-link:hover{color:var(--text);background:var(--card)}
-.nav-cta{
-  background:var(--accent);color:#fff;padding:8px 18px;border-radius:8px;
-  font-size:14px;font-weight:700;text-decoration:none;
-  box-shadow:0 0 20px var(--glow-orange);transition:all 0.2s;
-}
-.nav-cta:hover{background:#e85a25;transform:translateY(-1px);box-shadow:0 0 32px var(--glow-orange)}
+.tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+.tab:hover:not(.active) { color: rgba(255,255,255,0.85); }
 
-/* ── HERO ── */
-.hero{
-  min-height:100vh;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;
-  text-align:center;padding:100px clamp(20px,5vw,60px) 60px;
-  position:relative;overflow:hidden;
-}
+/* ── Page Layout ────────────────────────────────────────── */
+.page { display: none; padding: 16px; }
+.page.active { display: block; }
 
-/* Animated gradient orbs */
-.orb{position:absolute;border-radius:50%;filter:blur(80px);pointer-events:none;animation:drift 20s ease-in-out infinite}
-.orb1{width:600px;height:600px;background:radial-gradient(circle,rgba(255,107,53,0.12),transparent 70%);top:-200px;left:-200px;animation-delay:0s}
-.orb2{width:500px;height:500px;background:radial-gradient(circle,rgba(124,107,255,0.1),transparent 70%);bottom:-100px;right:-150px;animation-delay:-7s}
-.orb3{width:400px;height:400px;background:radial-gradient(circle,rgba(34,211,165,0.08),transparent 70%);top:50%;left:50%;transform:translate(-50%,-50%);animation-delay:-14s}
+/* ── Stats Row ──────────────────────────────────────────── */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.stat-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 14px 10px;
+  text-align: center;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+}
+.stat-card .num {
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1;
+}
+.stat-card .lbl {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 4px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.stat-pending .num { color: #b45309; }
+.stat-fixed   .num { color: var(--green2); }
+.stat-skip    .num { color: var(--muted); }
 
-@keyframes drift{
-  0%,100%{transform:translate(0,0) scale(1)}
-  33%{transform:translate(30px,-20px) scale(1.05)}
-  66%{transform:translate(-20px,30px) scale(0.95)}
+/* ── Filter Bar ─────────────────────────────────────────── */
+.filter-bar {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 12px;
+  margin-bottom: 14px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
 }
-
-/* Grid lines */
-.hero-grid{
-  position:absolute;inset:0;
-  background-image:
-    linear-gradient(rgba(255,255,255,0.02) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(255,255,255,0.02) 1px,transparent 1px);
-  background-size:60px 60px;
-  mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,black 0%,transparent 100%);
+.filter-bar select,
+.filter-bar input[type="text"] {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 7px 10px;
+  font-size: 12px;
+  background: var(--bg);
+  color: var(--text);
+  flex: 1;
+  min-width: 100px;
+  -webkit-appearance: none;
+  appearance: none;
 }
-
-.hero-content{position:relative;z-index:1;max-width:860px}
-
-.hero-eyebrow{
-  display:inline-flex;align-items:center;gap:8px;
-  background:rgba(255,107,53,0.1);border:1px solid rgba(255,107,53,0.25);
-  color:var(--accent);font-size:13px;font-weight:700;
-  padding:6px 16px;border-radius:999px;margin-bottom:28px;
-  letter-spacing:0.06em;text-transform:uppercase;
-  animation:fadeUp 0.6s ease forwards;
+.filter-bar select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px; }
+.btn-clear {
+  background: var(--navy);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
 }
-.hero-eyebrow::before{content:'●';font-size:8px;animation:pulse 2s ease-in-out infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
-
-.hero-h1{
-  font-size:clamp(40px,7vw,88px);font-weight:800;
-  letter-spacing:-0.04em;line-height:1.05;margin-bottom:24px;
-  animation:fadeUp 0.6s ease 0.1s both;
-}
-.hero-h1 .line1{display:block;color:var(--text)}
-.hero-h1 .line2{
-  display:block;
-  font-family:'Instrument Serif',serif;font-style:italic;font-weight:400;
-  background:linear-gradient(135deg,var(--accent) 0%,#ff9a5c 40%,var(--accent2) 100%);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-}
-
-.hero-sub{
-  font-size:clamp(16px,2.5vw,20px);color:var(--muted);
-  max-width:560px;margin:0 auto 40px;line-height:1.65;font-weight:400;
-  animation:fadeUp 0.6s ease 0.2s both;
-}
-
-.hero-btns{
-  display:flex;gap:12px;justify-content:center;flex-wrap:wrap;
-  animation:fadeUp 0.6s ease 0.3s both;
-  margin-bottom:60px;
-}
-.btn-hero-primary{
-  display:inline-flex;align-items:center;gap:10px;
-  background:var(--accent);color:#fff;
-  padding:15px 30px;border-radius:12px;
-  font-size:16px;font-weight:700;text-decoration:none;
-  box-shadow:0 4px 24px var(--glow-orange);
-  transition:all 0.2s;
-}
-.btn-hero-primary:hover{background:#e85a25;transform:translateY(-2px);box-shadow:0 8px 40px var(--glow-orange)}
-.btn-hero-secondary{
-  display:inline-flex;align-items:center;gap:10px;
-  background:transparent;color:var(--text);
-  border:1px solid var(--border2);
-  padding:15px 30px;border-radius:12px;
-  font-size:16px;font-weight:600;text-decoration:none;
-  transition:all 0.2s;
-}
-.btn-hero-secondary:hover{background:var(--card);border-color:var(--border2);transform:translateY(-2px)}
-
-/* Stats row */
-.stats-row{
-  display:flex;gap:32px;justify-content:center;flex-wrap:wrap;
-  animation:fadeUp 0.6s ease 0.4s both;
-}
-.stat{text-align:center}
-.stat-num{
-  font-size:28px;font-weight:800;letter-spacing:-0.04em;
-  background:linear-gradient(135deg,var(--text),var(--muted));
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-}
-.stat-label{font-size:12px;color:var(--muted);font-weight:500;margin-top:2px;text-transform:uppercase;letter-spacing:0.06em}
-
-@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
-
-/* ── TOOLS SECTION ── */
-.section{padding:clamp(60px,8vw,120px) clamp(20px,5vw,60px);position:relative;z-index:1}
-.section-label{
-  display:inline-flex;align-items:center;gap:8px;
-  font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;
-  color:var(--muted);margin-bottom:16px;
-}
-.section-label::before{content:'';width:24px;height:1px;background:var(--border2)}
-.section-title{
-  font-size:clamp(28px,4vw,48px);font-weight:800;letter-spacing:-0.04em;
-  line-height:1.15;margin-bottom:12px;
-}
-.section-sub{font-size:17px;color:var(--muted);max-width:480px;line-height:1.6;font-weight:400}
-
-/* Tool cards */
-.tools-grid{
-  display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
-  gap:24px;margin-top:48px;
-  max-width:1200px;margin-left:auto;margin-right:auto;
+.btn-clear:active { background: var(--navy2); }
+.record-count {
+  font-size: 12px;
+  color: var(--muted);
+  margin-left: auto;
+  white-space: nowrap;
 }
 
-.tool-card{
-  background:var(--card);border:1px solid var(--border);border-radius:20px;
-  overflow:hidden;transition:all 0.3s;text-decoration:none;color:inherit;
-  display:flex;flex-direction:column;
-  position:relative;
-}
-.tool-card:hover{transform:translateY(-6px);border-color:var(--border2);box-shadow:0 20px 60px rgba(0,0,0,0.4)}
-.tool-card::before{
-  content:'';position:absolute;inset:0;opacity:0;transition:opacity 0.3s;border-radius:20px;
-}
-.tool-card.orange::before{background:radial-gradient(ellipse 80% 60% at 50% 0%,var(--glow-orange),transparent)}
-.tool-card.purple::before{background:radial-gradient(ellipse 80% 60% at 50% 0%,var(--glow-purple),transparent)}
-.tool-card:hover::before{opacity:1}
-
-.tool-card-header{
-  padding:32px 32px 0;display:flex;align-items:flex-start;gap:16px;
-}
-.tool-icon{
-  width:56px;height:56px;border-radius:16px;
-  display:flex;align-items:center;justify-content:center;font-size:26px;
-  flex-shrink:0;
-}
-.tool-icon.orange{background:rgba(255,107,53,0.15);box-shadow:0 0 24px rgba(255,107,53,0.2)}
-.tool-icon.purple{background:rgba(124,107,255,0.15);box-shadow:0 0 24px rgba(124,107,255,0.2)}
-
-.tool-card-title{font-size:24px;font-weight:800;letter-spacing:-0.03em;margin-bottom:6px}
-.tool-card-sub{font-size:14px;color:var(--muted);line-height:1.5;font-weight:400}
-
-.tool-card-body{padding:24px 32px;flex:1}
-.feature-list{list-style:none;display:flex;flex-direction:column;gap:10px}
-.feature-list li{
-  display:flex;align-items:center;gap:10px;
-  font-size:14px;color:var(--muted);font-weight:400;
-}
-.feature-list li::before{
-  content:'';width:6px;height:6px;border-radius:50%;flex-shrink:0;
-  background:var(--border2);
-}
-.feature-list.orange li::before{background:var(--accent)}
-.feature-list.purple li::before{background:var(--accent2)}
-
-.tool-card-footer{
-  padding:24px 32px 28px;
-  border-top:1px solid var(--border);
-  display:flex;align-items:center;justify-content:space-between;
-}
-.tool-card-btn{
-  display:inline-flex;align-items:center;gap:8px;
-  padding:11px 22px;border-radius:10px;
-  font-size:14px;font-weight:700;text-decoration:none;
-  transition:all 0.2s;
-}
-.tool-card-btn.orange{background:var(--accent);color:#fff;box-shadow:0 4px 16px var(--glow-orange)}
-.tool-card-btn.orange:hover{background:#e85a25;transform:translateX(2px)}
-.tool-card-btn.purple{background:var(--accent2);color:#fff;box-shadow:0 4px 16px var(--glow-purple)}
-.tool-card-btn.purple:hover{background:#6a59e8;transform:translateX(2px)}
-.tool-card.teal::before{background:radial-gradient(ellipse 80% 60% at 50% 0%,var(--glow-teal),transparent)}
-.tool-icon.teal{background:rgba(34,211,165,0.15);box-shadow:0 0 24px rgba(34,211,165,0.2)}
-.tool-card-btn.teal{background:var(--accent3);color:#000;box-shadow:0 4px 16px var(--glow-teal)}
-.tool-card-btn.teal:hover{background:#1ab88f;transform:translateX(2px)}
-.feature-list.teal li::before{background:var(--accent3)}
-  font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;
-  color:var(--accent3);display:flex;align-items:center;gap:5px;
-}
-.tool-free-badge::before{content:'●';font-size:8px}
-
-/* ── FEATURES SECTION ── */
-.features-section{
-  background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);
-  padding:clamp(60px,8vw,100px) clamp(20px,5vw,60px);
-}
-.features-grid{
-  display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
-  gap:32px;margin-top:48px;max-width:1200px;margin-left:auto;margin-right:auto;
-}
-.feature-item{padding:24px;border-radius:16px;background:var(--card);border:1px solid var(--border);transition:all 0.2s}
-.feature-item:hover{border-color:var(--border2);transform:translateY(-3px)}
-.feature-emoji{font-size:32px;margin-bottom:14px;display:block}
-.feature-title{font-size:16px;font-weight:700;margin-bottom:8px;letter-spacing:-0.02em}
-.feature-desc{font-size:14px;color:var(--muted);line-height:1.6;font-weight:400}
-
-/* ── HOW IT WORKS ── */
-.how-section{padding:clamp(60px,8vw,120px) clamp(20px,5vw,60px)}
-.steps{
-  display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-  gap:0;margin-top:48px;max-width:900px;margin-left:auto;margin-right:auto;
-  position:relative;
-}
-.steps::before{
-  content:'';position:absolute;top:28px;left:calc(14% + 28px);right:calc(14% + 28px);
-  height:1px;background:linear-gradient(90deg,var(--accent),var(--accent2),var(--accent3));
-  opacity:0.3;
-}
-.step{text-align:center;padding:0 20px;position:relative;z-index:1}
-.step-num{
-  width:56px;height:56px;border-radius:50%;
-  background:var(--card);border:2px solid var(--border2);
-  display:flex;align-items:center;justify-content:center;
-  font-family:'Geist Mono',monospace;font-size:18px;font-weight:700;
-  margin:0 auto 16px;color:var(--text);transition:all 0.2s;
-}
-.step:hover .step-num{border-color:var(--accent);color:var(--accent);box-shadow:0 0 20px var(--glow-orange)}
-.step-title{font-size:16px;font-weight:700;margin-bottom:8px}
-.step-desc{font-size:13px;color:var(--muted);line-height:1.6}
-
-/* ── PRIVACY BANNER ── */
-.privacy-banner{
-  margin:0 clamp(20px,5vw,60px) clamp(40px,6vw,80px);
-  background:linear-gradient(135deg,rgba(34,211,165,0.06),rgba(124,107,255,0.06));
-  border:1px solid rgba(34,211,165,0.15);
-  border-radius:20px;padding:48px clamp(24px,5vw,64px);
-  display:flex;align-items:center;gap:40px;flex-wrap:wrap;
-  position:relative;z-index:1;overflow:hidden;
-}
-.privacy-banner::before{
-  content:'🔒';position:absolute;right:40px;top:50%;transform:translateY(-50%);
-  font-size:120px;opacity:0.05;
-}
-.privacy-text h3{font-size:24px;font-weight:800;letter-spacing:-0.03em;margin-bottom:8px}
-.privacy-text p{font-size:15px;color:var(--muted);max-width:480px;line-height:1.6}
-.privacy-badges{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
-.priv-badge{
-  display:flex;align-items:center;gap:6px;
-  background:rgba(34,211,165,0.1);border:1px solid rgba(34,211,165,0.2);
-  color:var(--accent3);font-size:12px;font-weight:700;
-  padding:6px 14px;border-radius:999px;letter-spacing:0.04em;
+/* ── Correction Cards ───────────────────────────────────── */
+.store-divider {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: #fff;
+  background: var(--navy);
+  padding: 5px 12px;
+  margin-top: 10px;
+  border-radius: 6px;
 }
 
-/* ── FAQ ── */
-.faq-section{padding:0 clamp(20px,5vw,60px) clamp(60px,8vw,100px)}
-.faq-grid{max-width:700px;margin:0 auto;margin-top:40px}
-.faq-item{
-  border-bottom:1px solid var(--border);
-  padding:20px 0;cursor:pointer;
+/* ── Single-line record row ─────────────────────────────── */
+.rec-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 8px 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--amber);
+  border-radius: 8px;
+  margin-bottom: 5px;
 }
-.faq-q{
-  display:flex;align-items:center;justify-content:space-between;gap:16px;
-  font-size:16px;font-weight:600;color:var(--text);
+.rec-line1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 5px;
 }
-.faq-arrow{
-  color:var(--muted);font-size:18px;transition:transform 0.2s;flex-shrink:0;
+.rec-line1-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
 }
-.faq-item.open .faq-arrow{transform:rotate(45deg);color:var(--accent)}
-.faq-a{
-  font-size:14px;color:var(--muted);line-height:1.7;max-height:0;
-  overflow:hidden;transition:all 0.3s ease;font-weight:400;
+.rec-line2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+  overflow: hidden;
 }
-.faq-item.open .faq-a{max-height:200px;padding-top:12px}
+.rec-row.fixed  { border-left-color: var(--green2); background: #f0fdf4; }
+.rec-row.skip   { border-left-color: #9ca3af; opacity: 0.65; }
+.rec-row.pending { border-left-color: var(--amber); }
+.rec-name {
+  font-weight: 700;
+  font-size: 14px;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--navy);
+}
+.rec-date {
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+  font-weight: 600;
+}
+.rec-times {
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.rec-hrs {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--navy);
+  white-space: nowrap;
+}
 
-/* ── FOOTER ── */
-footer{
-  background:var(--surface);border-top:1px solid var(--border);
-  padding:clamp(40px,6vw,64px) clamp(20px,5vw,60px) 32px;
+.time-btn-sm {
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
 }
-.footer-top{
-  display:flex;gap:48px;flex-wrap:wrap;margin-bottom:40px;
+.time-btn-sm.set {
+  background: #ecfdf5;
+  border-color: #6ee7b7;
+  color: var(--green);
 }
-.footer-brand{flex:1;min-width:220px}
-.footer-brand-logo{display:flex;align-items:center;gap:10px;margin-bottom:14px;text-decoration:none}
-.footer-logo-mark{
-  width:32px;height:32px;border-radius:9px;
-  background:linear-gradient(135deg,var(--accent),#ff9a5c);
-  display:flex;align-items:center;justify-content:center;font-size:16px;
+.time-btn-sm:active { transform: scale(0.96); }
+.btn-skip-sm {
+  background: var(--bg);
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
 }
-.footer-brand-name{font-size:18px;font-weight:800;letter-spacing:-0.03em;color:var(--text)}
-.footer-brand-name span{color:var(--accent)}
-.footer-tagline{font-size:13px;color:var(--muted);line-height:1.6;max-width:260px}
-.footer-col h4{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted2);margin-bottom:14px}
-.footer-col a{
-  display:block;font-size:14px;color:var(--muted);text-decoration:none;
-  margin-bottom:8px;transition:color 0.15s;
+.btn-undo-sm {
+  background: #fff7ed;
+  color: #c2410c;
+  border: 1px solid #fed7aa;
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
 }
-.footer-col a:hover{color:var(--text)}
-.footer-bottom{
-  border-top:1px solid var(--border);padding-top:24px;
-  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;
+.status-pill {
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
 }
-.footer-copy{font-size:13px;color:var(--muted2)}
-.footer-made{font-size:13px;color:var(--muted2)}
-.footer-made span{color:var(--accent)}
+.pill-pending { background: #fef3c7; color: #92400e; }
+.pill-fixed   { background: #d1fae5; color: #065f46; }
+.pill-skip    { background: #f3f4f6; color: #6b7280; }
 
-/* ── CTA SECTION ── */
-.cta-section{
-  padding:clamp(60px,8vw,100px) clamp(20px,5vw,60px);
-  text-align:center;position:relative;z-index:1;
-}
-.cta-card{
-  max-width:720px;margin:0 auto;
-  background:linear-gradient(135deg,rgba(255,107,53,0.08),rgba(124,107,255,0.06));
-  border:1px solid rgba(255,107,53,0.15);
-  border-radius:24px;padding:clamp(40px,6vw,72px) clamp(24px,4vw,56px);
-  position:relative;overflow:hidden;
-}
-.cta-card::after{
-  content:'';position:absolute;inset:-1px;border-radius:24px;
-  background:linear-gradient(135deg,rgba(255,107,53,0.15),transparent,rgba(124,107,255,0.1));
-  pointer-events:none;
-}
-.cta-card h2{font-size:clamp(28px,4vw,48px);font-weight:800;letter-spacing:-0.04em;margin-bottom:14px}
-.cta-card h2 em{font-family:'Instrument Serif',serif;font-style:italic;color:var(--accent)}
-.cta-card p{font-size:17px;color:var(--muted);margin-bottom:32px;line-height:1.6}
-.cta-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
 
-/* ── MOBILE ── */
-@media(max-width:640px){
-  .nav-links{display:none}
-  .steps::before{display:none}
-  .privacy-banner::before{display:none}
-  .footer-top{gap:32px}
-  .tools-grid{grid-template-columns:1fr}
+
+.cat-badge {
+  display: inline-block;
+  border-radius: 6px;
+  padding: 2px 6px;
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 110px;
 }
+.cat-multiple { background: #fee2e2; color: #7f1d1d; }
+.cat-early    { background: #fef3c7; color: #78350f; }
+.cat-late     { background: #fef3c7; color: #78350f; }
+.cat-hours    { background: #fef3c7; color: #78350f; }
+.cat-other    { background: #f3f4f6; color: #4b5563; }
+
+
+
+
+
+/* ── Save Footer ────────────────────────────────────────── */
+.save-footer {
+  position: sticky;
+  bottom: 0;
+  background: rgba(255,255,255,0.95);
+  backdrop-filter: blur(8px);
+  border-top: 1px solid var(--border);
+  padding: 12px 16px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.btn-save {
+  flex: 1;
+  background: var(--green2);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 14px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.3px;
+  box-shadow: 0 4px 12px rgba(46,125,50,0.35);
+  transition: all 0.15s;
+}
+.btn-save:active { transform: scale(0.98); box-shadow: none; }
+.btn-save:disabled { background: #9ca3af; box-shadow: none; }
+.save-label { font-size: 12px; color: var(--muted); }
+
+/* ── Time Picker Modal ──────────────────────────────────── */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  z-index: 200;
+  align-items: flex-end;
+  justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal-sheet {
+  background: var(--card);
+  border-radius: 20px 20px 0 0;
+  padding: 14px 16px 20px;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 -8px 40px rgba(0,0,0,0.2);
+  animation: slideUp 0.25s ease;
+}
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+.modal-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--navy);
+  text-align: center;
+  margin-bottom: 4px;
+}
+.modal-sub {
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+  margin-bottom: 16px;
+}
+.time-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 8px;
+  letter-spacing: 2px;
+}
+.time-seg {
+  cursor: pointer;
+  padding: 4px 10px;
+  border-radius: 10px;
+  transition: background 0.15s;
+}
+.time-seg.active { background: var(--navy); color: #fff; }
+.time-colon { color: #d1d5db; }
+
+.ampm-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.ampm-btn {
+  flex: 1;
+  padding: 7px;
+  border-radius: 8px;
+  border: 2px solid var(--border);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  background: var(--bg);
+  color: var(--muted);
+  transition: all 0.15s;
+}
+.ampm-btn.active {
+  background: var(--navy);
+  color: #fff;
+  border-color: var(--navy);
+}
+
+.numpad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.num-key {
+  height: 44px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.1s;
+  color: var(--text);
+}
+.num-key:active { background: var(--navy); color: #fff; transform: scale(0.94); }
+.num-key.del { color: #ef4444; font-size: 16px; }
+.num-key.zero { grid-column: 2; }
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+}
+.btn-cancel {
+  flex: 1;
+  padding: 13px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--muted);
+}
+.btn-confirm {
+  flex: 2;
+  padding: 13px;
+  border-radius: 10px;
+  border: none;
+  background: var(--green2);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(46,125,50,0.3);
+}
+.btn-confirm:active { transform: scale(0.97); }
+
+/* ── RawData Viewer ─────────────────────────────────────── */
+.raw-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  margin-bottom: 10px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.raw-card-header {
+  display: flex;
+  align-items: center;
+  padding: 12px 14px 6px;
+  gap: 10px;
+}
+.raw-name { font-weight: 700; font-size: 14px; flex: 1; }
+.raw-store { font-size: 11px; color: var(--muted); }
+.raw-meta {
+  display: flex;
+  gap: 6px;
+  padding: 0 14px 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.raw-total {
+  background: #1a1a1a;
+  color: #fff;
+}
+.raw-multiple {
+  background: #fee2e2;
+  border-left: 3px solid var(--red);
+}
+.raw-multiple .raw-name { color: var(--red); }
+.issue-badge {
+  display: inline-block;
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.ib-multiple { background: #fee2e2; color: #7f1d1d; }
+.ib-early    { background: #fef3c7; color: #78350f; }
+.ib-late     { background: #fef3c7; color: #78350f; }
+.ib-hours    { background: #fef3c7; color: #78350f; }
+
+/* ── Dashboard ──────────────────────────────────────────── */
+.dash-section { margin-bottom: 20px; }
+.dash-section h3 {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+.store-row {
+  background: var(--card);
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  box-shadow: var(--shadow);
+}
+.store-row .store-name { font-weight: 600; font-size: 14px; flex: 1; }
+.mini-pills { display: flex; gap: 5px; }
+.mini-pill {
+  border-radius: 999px;
+  padding: 3px 9px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.mp-pending { background: #fef3c7; color: #92400e; }
+.mp-fixed   { background: #d1fae5; color: #065f46; }
+
+/* ── Loading / Error ────────────────────────────────────── */
+.loading-state, .error-state {
+  text-align: center;
+  padding: 48px 20px;
+  color: var(--muted);
+}
+.loading-state .spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--border);
+  border-top-color: var(--navy);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 14px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.error-state { color: var(--red); }
+.retry-btn {
+  margin-top: 12px;
+  background: var(--navy);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ── Config Banner ──────────────────────────────────────── */
+.config-banner {
+  background: #fffbeb;
+  border: 2px solid var(--amber);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.config-banner strong { color: var(--navy); }
+.config-input {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 13px;
+  margin-top: 8px;
+  font-family: monospace;
+}
+.btn-connect {
+  margin-top: 8px;
+  background: var(--navy);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+}
+
+/* ── Toast ──────────────────────────────────────────────── */
+.toast {
+  position: fixed;
+  bottom: 90px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: #1a1f2e;
+  color: #fff;
+  border-radius: 10px;
+  padding: 11px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  opacity: 0;
+  transition: all 0.3s;
+  z-index: 300;
+  pointer-events: none;
+}
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+.toast.success { background: var(--green); }
+.toast.error   { background: var(--red); }
+
+/* ── Tablet/Desktop ─────────────────────────────────────── */
+@media (min-width: 640px) {
+  .page { max-width: 100%; margin: 0 auto; padding: 16px 20px; }
+  .stats-row { grid-template-columns: repeat(3, 1fr); }
+
+  .modal-overlay { align-items: center; }
+  .modal-sheet { border-radius: 20px; }
+}
+
+/* ── Raw Data Table ─────────────────────────────────────── */
+.raw-table-wrap {
+  overflow-x: auto;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  width: 100%;
+}
+.raw-table {
+  width: 100%;
+  min-width: 1100px;
+  border-collapse: collapse;
+  font-size: 13px;
+  background: var(--card);
+  table-layout: fixed;
+}
+.raw-table colgroup col:nth-child(1) { width: 80px; }
+.raw-table colgroup col:nth-child(2) { width: 175px; }
+.raw-table colgroup col:nth-child(3) { width: 100px; }
+.raw-table colgroup col:nth-child(4) { width: 75px; }
+.raw-table colgroup col:nth-child(5) { width: 95px; }
+.raw-table colgroup col:nth-child(6) { width: 95px; }
+.raw-table colgroup col:nth-child(7) { width: 65px; }
+.raw-table colgroup col:nth-child(8) { width: 415px; }
+.raw-table thead tr {
+  background: var(--navy);
+  color: #fff;
+}
+.raw-table th {
+  padding: 10px 12px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  position: sticky;
+  top: 0;
+  white-space: nowrap;
+}
+.raw-table td {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.raw-table td:last-child {
+  white-space: normal;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+.raw-table tbody tr:hover td { background: #f0f4ff; }
+.raw-table tbody tr:last-child td { border-bottom: none; }
+.td-name { font-weight: 600; }
+.td-flag { background: #fef3c7 !important; font-weight: 600; color: #92400e; }
+.rt-total td {
+  background: var(--navy) !important;
+  color: #fff !important;
+  font-weight: 700;
+}
+.rt-multiple td { background: #fff1f1 !important; }
+.rt-multiple .td-name { color: var(--red); }
+.rt-flagged td { background: #fffdf0; }
+
+/* ── Processed Tab ──────────────────────────────────────── */
+.btn-build {
+  background: var(--green2);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 13px 24px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(46,125,50,0.3);
+  transition: all 0.15s;
+  width: 100%;
+}
+.btn-build:active  { transform: scale(0.98); }
+.btn-build:disabled { background: #9ca3af; box-shadow: none; }
+.proc-summary-box {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.proc-stat {
+  flex: 1;
+  background: var(--card);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  padding: 12px 10px;
+  text-align: center;
+  box-shadow: var(--shadow);
+}
+.proc-num {
+  display: block;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--navy);
+}
+.proc-num.green { color: var(--green2); }
+.proc-num.red   { color: var(--red); }
+.proc-lbl {
+  display: block;
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 3px;
+  font-weight: 600;
+}
+.proc-fixed   td { background: #f0fdf4 !important; }
+.proc-flagged td { background: #fffdf0 !important; }
+.badge-corrected {
+  background: #d1fae5;
+  color: #065f46;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* ── Processed Table (separate from Raw Data table) ─────── */
+.proc-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  background: var(--card);
+}
+.proc-table thead tr { background: var(--navy); color: #fff; }
+.proc-table th {
+  padding: 10px 12px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  white-space: nowrap;
+}
+.proc-table td {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  white-space: nowrap;
+}
+.proc-table td:last-child { font-size: 12px; color: var(--muted); white-space: normal; }
+.proc-table tbody tr:hover td { background: #f0f4ff; }
 </style>
 </head>
 <body>
 
-<!-- ── NAV ── -->
-<nav>
-  <a href="#" class="nav-logo">
-    <div class="nav-logo-mark">⚡</div>
-    <span class="nav-logo-name">Flow<span>PDF</span></span>
-  </a>
-  <div class="nav-links">
-    <a href="#tools" class="nav-link">Tools</a>
-    <a href="#features" class="nav-link">Features</a>
-    <a href="#how" class="nav-link">How it works</a>
-    <a href="#faq" class="nav-link">FAQ</a>
+<!-- ─── CONFIG — SET YOUR WEB APP URL ──────────────────── -->
+<script>
+const CONFIG = {
+  WEB_APP_URL: 'https://script.google.com/macros/s/AKfycby7EJnot2uUosV8CqRm3avywLVy87wP-4ps5naCm_m4udWHNlyTPeNpPGwHSQrDBaS0pQ/exec',
+};
+</script>
+
+<!-- ─── TOP BAR ─────────────────────────────────────────── -->
+<div class="topbar">
+  <div class="topbar-logo">Employee <span>Hours Corrections</span></div>
+  <span class="topbar-badge" id="pendingBadge">—</span>
+</div>
+<div class="tabnav">
+  <div class="tab active" onclick="switchTab('manager')">⏱ Manager</div>
+  <div class="tab" onclick="switchTab('rawdata')">📋 Raw Data</div>
+  <div class="tab" onclick="switchTab('processed')">✅ Processed</div>
+  <div class="tab" onclick="switchTab('dashboard')">📊 Dashboard</div>
+  <div class="tab" onclick="switchTab('settings')">⚙️ Settings</div>
+</div>
+
+<!-- ─── MANAGER PANEL ───────────────────────────────────── -->
+<div class="page active" id="page-manager">
+  <div id="manager-content">
+    <div class="loading-state"><div class="spinner"></div><div>Loading corrections…</div></div>
   </div>
-  <a href="#tools" class="nav-cta">Get Started Free →</a>
-</nav>
-
-<!-- ── HERO ── -->
-<section class="hero">
-  <div class="orb orb1"></div>
-  <div class="orb orb2"></div>
-  <div class="orb orb3"></div>
-  <div class="hero-grid"></div>
-
-  <div class="hero-content">
-    <div class="hero-eyebrow">Free forever · No sign-up · No limits</div>
-    <h1 class="hero-h1">
-      <span class="line1">PDF tools that are</span>
-      <span class="line2">actually free</span>
-    </h1>
-    <p class="hero-sub">Merge, edit, and resize PDFs with pro-level tools — smart erase, text, draw, redact, custom page sizes and more. Everything runs in your browser. Your files never leave your device.</p>
-    <div class="hero-btns">
-      <a href="pdf-merger.html" class="btn-hero-primary">📄 Merge PDFs Free →</a>
-      <a href="pdf-editor-pro.html" class="btn-hero-secondary">✂️ Edit PDFs Free →</a>
-      <a href="pdf-resize.html" class="btn-hero-secondary">📐 Resize PDFs Free →</a>
-    </div>
-    <div class="stats-row">
-      <div class="stat">
-        <div class="stat-num">3</div>
-        <div class="stat-label">Powerful tools</div>
-      </div>
-      <div class="stat">
-        <div class="stat-num">∞</div>
-        <div class="stat-label">No file limits</div>
-      </div>
-      <div class="stat">
-        <div class="stat-num">0</div>
-        <div class="stat-label">Files uploaded</div>
-      </div>
-      <div class="stat">
-        <div class="stat-num">Free</div>
-        <div class="stat-label">Always & forever</div>
-      </div>
-    </div>
+  <div class="save-footer">
+    <button class="btn-save" id="saveBtn" onclick="saveAll()" disabled>Save All Changes</button>
+    <div class="save-label" id="saveLabel">0 changes</div>
   </div>
-</section>
+</div>
 
-<!-- ── TOOLS ── -->
-<section class="section" id="tools">
-  <div style="max-width:1200px;margin:0 auto">
-    <div class="section-label">Our tools</div>
-    <div class="section-title">Everything you need<br>for PDF work</div>
-    <div class="section-sub">Three powerful tools, zero cost. No watermarks, no page limits, no hidden fees.</div>
-
-    <div class="tools-grid">
-
-      <!-- MERGER -->
-      <a href="pdf-merger.html" class="tool-card orange" style="cursor:pointer">
-        <div class="tool-card-header">
-          <div class="tool-icon orange">📄</div>
-          <div>
-            <div class="tool-card-title">PDF Merger</div>
-            <div class="tool-card-sub">Combine any number of PDF files into one, in any order you choose.</div>
-          </div>
-        </div>
-        <div class="tool-card-body">
-          <ul class="feature-list orange">
-            <li>Drag & drop unlimited PDF files</li>
-            <li>Sort A–Z, by size, or drag to reorder</li>
-            <li>↑↓ buttons for easy mobile reordering</li>
-            <li>Right-click context menu per file</li>
-            <li>Instant browser-based processing</li>
-            <li>No file size limits</li>
-          </ul>
-        </div>
-        <div class="tool-card-footer">
-          <span class="tool-card-btn orange">Merge PDFs →</span>
-          <span class="tool-free-badge">Free forever</span>
-        </div>
-      </a>
-
-      <!-- EDITOR -->
-      <a href="pdf-editor-pro.html" class="tool-card purple" style="cursor:pointer">
-        <div class="tool-card-header">
-          <div class="tool-icon purple">✂️</div>
-          <div>
-            <div class="tool-card-title">PDF Editor Pro</div>
-            <div class="tool-card-sub">Advanced editing tools — erase, text, draw, redact and manage pages.</div>
-          </div>
-        </div>
-        <div class="tool-card-body">
-          <ul class="feature-list purple">
-            <li>🎨 Smart Color Match Erase</li>
-            <li>✏️ Add text anywhere on page</li>
-            <li>🖊️ Freehand drawing & annotation</li>
-            <li>⬛ Legal-grade black redaction</li>
-            <li>📐 Rectangle & highlight shapes</li>
-            <li>📄 Page manager — reorder, duplicate, delete</li>
-            <li>↩️ Full undo/redo history</li>
-          </ul>
-        </div>
-        <div class="tool-card-footer">
-          <span class="tool-card-btn purple">Edit PDFs →</span>
-          <span class="tool-free-badge">Free forever</span>
-        </div>
-      </a>
-
-      <!-- RESIZER -->
-      <a href="pdf-resize.html" class="tool-card teal" style="cursor:pointer">
-        <div class="tool-card-header">
-          <div class="tool-icon teal">📐</div>
-          <div>
-            <div class="tool-card-title">PDF Resizer</div>
-            <div class="tool-card-sub">Resize any PDF to exact dimensions — 8 presets or fully custom sizes.</div>
-          </div>
-        </div>
-        <div class="tool-card-body">
-          <ul class="feature-list teal">
-            <li>📄 8 presets: A4, A3, A5, Letter, Legal & more</li>
-            <li>📏 Custom size in mm, cm, in, px or pt</li>
-            <li>🔄 Portrait / Landscape orientation</li>
-            <li>⊡ Fit, Fill, Stretch or Center content</li>
-            <li>📊 Live file size & dimension info</li>
-            <li>📄 Apply to all pages or custom range</li>
-            <li>↩️ Full undo/redo + side-by-side preview</li>
-          </ul>
-        </div>
-        <div class="tool-card-footer">
-          <span class="tool-card-btn teal">Resize PDFs →</span>
-          <span class="tool-free-badge">Free forever</span>
-        </div>
-      </a>
-
-    </div>
+<!-- ─── RAW DATA VIEWER ─────────────────────────────────── -->
+<div class="page" id="page-rawdata">
+  <div class="filter-bar">
+    <select id="raw-store" onchange="filterRaw()">
+      <option value="">All Stores</option>
+    </select>
+    <select id="raw-date" onchange="filterRaw()">
+      <option value="">All Dates</option>
+    </select>
+    <select id="raw-issue" onchange="filterRaw()">
+      <option value="">All Issues</option>
+      <option value="multiple">Multiple Records</option>
+      <option value="early">Clock In Early</option>
+      <option value="late">Clock Out Late</option>
+      <option value="hours">Hours &gt; 8:59</option>
+      <option value="clean">Clean</option>
+    </select>
+    <button class="btn-clear" onclick="clearRawFilters()">Clear</button>
+    <span class="record-count" id="raw-count"></span>
   </div>
-</section>
-
-<!-- ── FEATURES ── -->
-<section class="features-section" id="features">
-  <div style="max-width:1200px;margin:0 auto">
-    <div class="section-label">Why FlowPDF</div>
-    <div class="section-title">Built different</div>
-    <div class="section-sub">Most PDF tools upload your files to servers and charge monthly fees. We don't.</div>
-    <div class="features-grid">
-      <div class="feature-item">
-        <span class="feature-emoji">📐</span>
-        <div class="feature-title">Advanced Resizer</div>
-        <div class="feature-desc">Resize to A4, Letter, custom mm/cm/in/px — with Fit, Fill, Stretch or Center modes and live before/after preview.</div>
-      </div>
-      <div class="feature-item">
-        <span class="feature-emoji">🔒</span>
-        <div class="feature-title">100% Private</div>
-        <div class="feature-desc">Your files never leave your device. All processing happens locally in your browser using JavaScript — zero server uploads.</div>
-      </div>
-      <div class="feature-item">
-        <span class="feature-emoji">♾️</span>
-        <div class="feature-title">Truly Unlimited</div>
-        <div class="feature-desc">No file size caps, no page limits, no daily quotas. Merge 100 PDFs or edit a 500-page document — no restrictions.</div>
-      </div>
-      <div class="feature-item">
-        <span class="feature-emoji">⚡</span>
-        <div class="feature-title">Instant Results</div>
-        <div class="feature-desc">No uploading and waiting. Your computer does all the work, so results are immediate — even for large files.</div>
-      </div>
-      <div class="feature-item">
-        <span class="feature-emoji">🎨</span>
-        <div class="feature-title">Smart Color Match</div>
-        <div class="feature-desc">Our erase tool samples the exact background color under your selection, making deletions invisible — not painted white.</div>
-      </div>
-      <div class="feature-item">
-        <span class="feature-emoji">📱</span>
-        <div class="feature-title">Works Everywhere</div>
-        <div class="feature-desc">Fully responsive on phones, tablets, and desktops. Touch-friendly tools designed for real mobile use.</div>
-      </div>
-      <div class="feature-item">
-        <span class="feature-emoji">🆓</span>
-        <div class="feature-title">Free Forever</div>
-        <div class="feature-desc">No freemium trap. No hidden paid tiers. No watermarks. No credit card. Just free PDF tools for everyone.</div>
-      </div>
-    </div>
+  <div id="raw-content">
+    <div class="loading-state"><div class="spinner"></div><div>Loading raw data…</div></div>
   </div>
-</section>
+</div>
 
-<!-- ── HOW IT WORKS ── -->
-<section class="how-section" id="how">
-  <div style="max-width:1200px;margin:0 auto;text-align:center">
-    <div class="section-label" style="justify-content:center">How it works</div>
-    <div class="section-title">Three steps, done</div>
-    <div class="section-sub" style="margin:0 auto">No account. No learning curve. Just open, edit, download.</div>
-    <div class="steps">
-      <div class="step">
-        <div class="step-num">01</div>
-        <div class="step-title">Open your PDF</div>
-        <div class="step-desc">Drag & drop your PDF file or tap to browse. It loads instantly in your browser.</div>
-      </div>
-      <div class="step">
-        <div class="step-num">02</div>
-        <div class="step-title">Edit or merge</div>
-        <div class="step-desc">Use any tool — erase areas, add text, merge files, redact content, manage pages.</div>
-      </div>
-      <div class="step">
-        <div class="step-num">03</div>
-        <div class="step-title">Download</div>
-        <div class="step-desc">Click download and your edited PDF saves directly to your device. Done.</div>
-      </div>
-    </div>
+<!-- ─── PROCESSED ──────────────────────────────────────── -->
+<div class="page" id="page-processed">
+  <div style="margin-bottom:14px">
+    <button class="btn-build" onclick="buildProcessed()" id="buildBtn">
+      ▶ Build Processed Sheet
+    </button>
+    <p style="font-size:12px;color:var(--muted);margin-top:8px;line-height:1.6">
+      Applies all <strong>FIXED</strong> corrections from the Manager tab and writes results
+      to the Processed sheet in your Google Spreadsheet.
+    </p>
   </div>
-</section>
-
-<!-- ── PRIVACY BANNER ── -->
-<div class="privacy-banner">
-  <div class="privacy-text">
-    <h3>Your files are yours alone.</h3>
-    <p>We built FlowPDF on a simple principle: your documents are private. We have no servers, no database, no file storage. Technically, we cannot see your files even if we wanted to.</p>
-    <div class="privacy-badges">
-      <span class="priv-badge">✓ No server uploads</span>
-      <span class="priv-badge">✓ No data collection</span>
-      <span class="priv-badge">✓ No cookies</span>
-      <span class="priv-badge">✓ No account needed</span>
+  <div id="proc-summary" style="display:none" class="proc-summary-box"></div>
+  <div class="filter-bar" id="proc-filter-bar" style="display:none">
+    <select id="proc-store" onchange="filterProcessed()"><option value="">All Stores</option></select>
+    <button class="btn-clear" onclick="clearProcFilter()">Clear</button>
+    <span class="record-count" id="proc-count"></span>
+  </div>
+  <div id="proc-content">
+    <div class="loading-state" style="padding:32px 0;color:var(--muted)">
+      Click "Build Processed Sheet" to generate results,<br>or load existing data below.
+      <br><br>
+      <button class="retry-btn" onclick="loadProcessed()">Load Existing Processed Data</button>
     </div>
   </div>
 </div>
 
-<!-- ── FAQ ── -->
-<section class="faq-section" id="faq">
-  <div style="max-width:700px;margin:0 auto;text-align:center">
-    <div class="section-label" style="justify-content:center">FAQ</div>
-    <div class="section-title">Questions answered</div>
+<!-- ─── DASHBOARD ───────────────────────────────────────── -->
+<div class="page" id="page-dashboard">
+  <div id="dash-content">
+    <div class="loading-state"><div class="spinner"></div><div>Loading…</div></div>
   </div>
-  <div class="faq-grid">
-    <div class="faq-item" onclick="toggleFaq(this)">
-      <div class="faq-q">Is FlowPDF really free? <span class="faq-arrow">+</span></div>
-      <div class="faq-a">Yes, completely. There are no paid plans, no premium features, no watermarks, and no credit card required. All tools are free to use as many times as you want.</div>
-    </div>
-    <div class="faq-item" onclick="toggleFaq(this)">
-      <div class="faq-q">Are my files safe? <span class="faq-arrow">+</span></div>
-      <div class="faq-a">Absolutely. Your files never leave your device. All processing is done locally in your browser using JavaScript (pdf-lib and PDF.js). We have no servers that receive your files.</div>
-    </div>
-    <div class="faq-item" onclick="toggleFaq(this)">
-      <div class="faq-q">How does the Smart Color Erase work? <span class="faq-arrow">+</span></div>
-      <div class="faq-a">When you select an area to erase, FlowPDF samples the pixel color at the center of your selection. It then fills the erased area with that exact color — making the deletion invisible rather than leaving a white box.</div>
-    </div>
-    <div class="faq-item" onclick="toggleFaq(this)">
-      <div class="faq-q">Is there a file size or page limit? <span class="faq-arrow">+</span></div>
-      <div class="faq-a">No limits. You can merge as many PDFs as you want and edit documents of any size. The only constraint is your device's available memory, which is rarely an issue for normal PDFs.</div>
-    </div>
-    <div class="faq-item" onclick="toggleFaq(this)">
-      <div class="faq-q">Does it work on mobile? <span class="faq-arrow">+</span></div>
-      <div class="faq-a">Yes. Both the PDF Merger and PDF Editor are fully touch-friendly and work on iPhones, Android phones, and tablets. The editor supports touch drawing and touch selection.</div>
-    </div>
-    <div class="faq-item" onclick="toggleFaq(this)">
-      <div class="faq-q">Can I edit password-protected PDFs? <span class="faq-arrow">+</span></div>
-      <div class="faq-a">FlowPDF attempts to open encrypted PDFs with the ignoreEncryption flag, which works for some lightly protected files. Strongly password-protected PDFs will require the password to be removed first by the document owner.</div>
-    </div>
-  </div>
-</section>
+</div>
 
-<!-- ── CTA ── -->
-<section class="cta-section">
-  <div class="cta-card">
-    <h2>Start editing <em>right now</em></h2>
-    <p>No account. No download. No fee. Just open your PDF and get to work.</p>
-    <div class="cta-btns">
-      <a href="pdf-merger.html" class="btn-hero-primary">📄 Merge PDFs →</a>
-      <a href="pdf-editor-pro.html" class="btn-hero-secondary">✂️ Edit PDFs →</a>
-      <a href="pdf-resize.html" class="btn-hero-secondary">📐 Resize PDFs →</a>
-    </div>
+<!-- ─── SETTINGS ────────────────────────────────────────── -->
+<div class="page" id="page-settings">
+  <div class="config-banner">
+    <strong>🔧 Connect to your Google Apps Script</strong><br>
+    Paste your Web App URL below. Deploy it from:<br>
+    Apps Script → Deploy → New Deployment → Web App<br>
+    Execute as: <em>Me</em> · Who has access: <em>Anyone</em>
+    <input class="config-input" type="url" id="webAppUrlInput"
+      placeholder="https://script.google.com/macros/s/.../exec"
+      value="">
+    <button class="btn-connect" onclick="saveConfig()">✓ Save & Connect</button>
   </div>
-</section>
+  <div style="background:var(--card);border-radius:var(--radius);border:1px solid var(--border);padding:16px;font-size:13px;line-height:1.8;box-shadow:var(--shadow);">
+    <strong style="color:var(--navy)">Connection Status</strong><br>
+    <span id="conn-status" style="color:var(--muted)">Not configured</span>
+    <br><br>
+    <strong style="color:var(--navy)">How to deploy</strong><br>
+    1. Open your Apps Script project<br>
+    2. Paste the <code>PASTE_INTO_APPS_SCRIPT.gs</code> content at the bottom<br>
+    3. Click Deploy → New Deployment<br>
+    4. Type: Web App · Execute as: Me · Access: Anyone<br>
+    5. Copy the URL and paste it above<br><br>
+    <button style="background:var(--navy);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;" onclick="loadAll()">🔄 Refresh Data</button>
+  </div>
+</div>
 
-<!-- ── FOOTER ── */
-<footer>
-  <div class="footer-top">
-    <div class="footer-brand">
-      <a href="#" class="footer-brand-logo">
-        <div class="footer-logo-mark">⚡</div>
-        <span class="footer-brand-name">Flow<span>PDF</span></span>
-      </a>
-      <p class="footer-tagline">Free PDF tools that respect your privacy. No uploads. No accounts. No nonsense.</p>
+<!-- ─── TIME PICKER MODAL ───────────────────────────────── -->
+<div class="modal-overlay" id="timePicker">
+  <div class="modal-sheet">
+    <div class="modal-title" id="pickerTitle">Set Time</div>
+    <div class="modal-sub" id="pickerSub">Tap hour or minute to edit</div>
+    <div class="time-display">
+      <span class="time-seg" id="dispH" onclick="setEditH()">12</span>
+      <span class="time-colon">:</span>
+      <span class="time-seg" id="dispM" onclick="setEditM()">00</span>
     </div>
-    <div class="footer-col">
-      <h4>Tools</h4>
-      <a href="pdf-merger.html">PDF Merger</a>
-      <a href="pdf-editor-pro.html">PDF Editor Pro</a>
-      <a href="pdf-resize.html">PDF Resizer</a>
+    <div class="ampm-row">
+      <button class="ampm-btn active" id="btnAM" onclick="setAM('AM')">AM</button>
+      <button class="ampm-btn"        id="btnPM" onclick="setAM('PM')">PM</button>
     </div>
-    <div class="footer-col">
-      <h4>Features</h4>
-      <a href="pdf-editor-pro.html">Smart Color Erase</a>
-      <a href="pdf-editor-pro.html">Add Text & Draw</a>
-      <a href="pdf-editor-pro.html">Redact Content</a>
-      <a href="pdf-resize.html">Resize to A4 / Letter</a>
-      <a href="pdf-resize.html">Custom Dimensions</a>
-      <a href="pdf-merger.html">Sort & Merge</a>
+    <div class="numpad">
+      <button class="num-key" onclick="numPress(1)">1</button>
+      <button class="num-key" onclick="numPress(2)">2</button>
+      <button class="num-key" onclick="numPress(3)">3</button>
+      <button class="num-key" onclick="numPress(4)">4</button>
+      <button class="num-key" onclick="numPress(5)">5</button>
+      <button class="num-key" onclick="numPress(6)">6</button>
+      <button class="num-key" onclick="numPress(7)">7</button>
+      <button class="num-key" onclick="numPress(8)">8</button>
+      <button class="num-key" onclick="numPress(9)">9</button>
+      <button class="num-key del" onclick="numPress('C')">⌫</button>
+      <button class="num-key zero" onclick="numPress(0)">0</button>
     </div>
-    <div class="footer-col">
-      <h4>Privacy</h4>
-      <a href="#">No uploads</a>
-      <a href="#">No data stored</a>
-      <a href="#">No tracking</a>
-      <a href="#">Open source libs</a>
+    <div class="modal-actions">
+      <button class="btn-cancel"  onclick="closeTimePicker()">Cancel</button>
+      <button class="btn-confirm" onclick="confirmTime()">✓ Confirm</button>
     </div>
   </div>
-  <div class="footer-bottom">
-    <span class="footer-copy">© 2026 FlowPDF. All rights reserved.</span>
-    <span class="footer-made">Built with <span>♥</span> using pdf-lib & PDF.js</span>
-  </div>
-</footer>
+</div>
+
+<!-- ─── TOAST ───────────────────────────────────────────── -->
+<div class="toast" id="toast"></div>
 
 <script>
-function toggleFaq(el){
-  const isOpen=el.classList.contains('open');
-  document.querySelectorAll('.faq-item').forEach(f=>f.classList.remove('open'));
-  if(!isOpen)el.classList.add('open');
+// ── State ──────────────────────────────────────────────────
+let ALL_CORRECTIONS = [];  // raw from sheet
+let ALL_RAW         = [];
+let CHANGES         = {};  // { rowIndex: { cs, ce, st } }
+let CURRENT_TAB     = 'manager';
+
+// Picker state
+let pRow = null, pField = null, pH = 12, pM = 0, pA = 'AM', pEdit = 'h', pBuf = '';
+
+// ── Init ───────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  const saved = localStorage.getItem('aqWebAppUrl') || '';
+  document.getElementById('webAppUrlInput').value = saved;
+  CONFIG.WEB_APP_URL = saved;
+  if (CONFIG.WEB_APP_URL) {
+    loadAll();
+  } else {
+    showConfigPrompt();
+  }
+});
+
+function showConfigPrompt() {
+  document.getElementById('manager-content').innerHTML = `
+    <div class="config-banner" style="margin-top:8px">
+      <strong>👋 Welcome!</strong> Configure your Apps Script URL in the
+      <strong>Settings</strong> tab to get started.
+    </div>`;
+  document.getElementById('raw-content').innerHTML = '';
+  document.getElementById('dash-content').innerHTML = '';
+  document.getElementById('conn-status').textContent = 'Not configured';
 }
 
-// Scroll reveal
-const observer=new IntersectionObserver(entries=>{
-  entries.forEach(e=>{
-    if(e.isIntersecting){
-      e.target.style.opacity='1';
-      e.target.style.transform='translateY(0)';
-    }
-  });
-},{threshold:0.1});
+function saveConfig() {
+  const url = document.getElementById('webAppUrlInput').value.trim();
+  if (!url || !url.includes('script.google.com')) {
+    toast('Please enter a valid Apps Script URL', 'error'); return;
+  }
+  CONFIG.WEB_APP_URL = url;
+  localStorage.setItem('aqWebAppUrl', url);
+  toast('Saved! Connecting…', 'success');
+  loadAll();
+}
 
-document.querySelectorAll('.tool-card,.feature-item,.step,.faq-item').forEach(el=>{
-  el.style.opacity='0';
-  el.style.transform='translateY(20px)';
-  el.style.transition='opacity 0.5s ease, transform 0.5s ease';
-  observer.observe(el);
-});
+// ── Load All Data ──────────────────────────────────────────
+async function loadAll() {
+  loadCorrections();
+  loadRawData();
+}
+
+function callAPI(action, payload = {}) {
+  return new Promise((resolve, reject) => {
+    const base = CONFIG.WEB_APP_URL;
+    if (!base) { reject(new Error('No URL configured')); return; }
+
+    // Use JSONP — only method that bypasses Apps Script CORS reliably
+    const cbName = 'aq_cb_' + Date.now();
+    const params = new URLSearchParams({ action, callback: cbName });
+    if (payload.payload) {
+      params.set('payload', JSON.stringify(payload.payload));
+    }
+
+    const script = document.createElement('script');
+    const timer  = setTimeout(() => {
+      cleanup();
+      reject(new Error('Request timed out'));
+    }, 15000);
+
+    function cleanup() {
+      clearTimeout(timer);
+      delete window[cbName];
+      if (script.parentNode) script.parentNode.removeChild(script);
+    }
+
+    window[cbName] = (data) => {
+      cleanup();
+      resolve(data);
+    };
+
+    script.onerror = () => { cleanup(); reject(new Error('Script load failed')); };
+    script.src = base + '?' + params.toString();
+    document.head.appendChild(script);
+  });
+}
+
+async function loadCorrections() {
+  const el = document.getElementById('manager-content');
+  el.innerHTML = '<div class="loading-state"><div class="spinner"></div><div>Loading corrections…</div></div>';
+  try {
+    const data = await callAPI('getCorrections');
+    if (!data.ok) throw new Error(data.error);
+    ALL_CORRECTIONS = data.data;
+    CHANGES = {};
+    renderManager();
+    renderDashboard();
+    document.getElementById('conn-status').textContent = '✅ Connected — data loaded';
+  } catch(e) {
+    el.innerHTML = `<div class="error-state">⚠️ ${e.message}<br><button class="retry-btn" onclick="loadCorrections()">Retry</button></div>`;
+    document.getElementById('conn-status').textContent = '❌ Error: ' + e.message;
+  }
+}
+
+async function loadRawData() {
+  const el = document.getElementById('raw-content');
+  el.innerHTML = '<div class="loading-state"><div class="spinner"></div><div>Loading raw data…</div></div>';
+  try {
+    const data = await callAPI('getRawData');
+    if (!data.ok) throw new Error(data.error);
+    ALL_RAW = data.data;
+    populateRawStores();
+    renderRaw();
+  } catch(e) {
+    el.innerHTML = `<div class="error-state">⚠️ ${e.message}<br><button class="retry-btn" onclick="loadRawData()">Retry</button></div>`;
+  }
+}
+
+// ── Manager Render ─────────────────────────────────────────
+function renderManager() {
+  const storeFilter  = '';
+  const statusFilter = '';
+  let pending = 0, fixed = 0, skip = 0;
+
+  // Parse records
+  const records = [];
+  ALL_CORRECTIONS.forEach((row, i) => {
+    const emp = (row[2] || '').trim();
+    const loc = (row[1] || '').trim();
+    if (!emp || !loc) return;
+    const ri = i + 2;
+    const ch = CHANGES[ri] || {};
+    const st = ch.st || (row[0] || 'PENDING').trim().toUpperCase();
+    if (st === 'PENDING') pending++;
+    else if (st === 'FIXED') fixed++;
+    else if (st === 'SKIP') skip++;
+    records.push({ ri, st, loc, emp,
+      date:     (row[3] || '').trim(),
+      day:      (row[4] || '').trim(),
+      oStart:   (row[5] || '').trim(),
+      oEnd:     (row[6] || '').trim(),
+      oHours:   (row[7] || '').trim(),
+      issue:    (row[8] || '').trim(),
+      cs:       ch.cs !== undefined ? ch.cs : (row[9] || '').trim(),
+      ce:       ch.ce !== undefined ? ch.ce : (row[10] || '').trim(),
+      cat:      (row[12] || '').trim(),
+    });
+  });
+
+  // Stats
+  document.getElementById('pendingBadge').textContent = pending + ' Pending';
+  updateSaveBtn();
+
+  // Group by store
+  let html = `
+    <div class="stats-row" style="margin-top:8px">
+      <div class="stat-card stat-pending"><div class="num">${pending}</div><div class="lbl">Pending</div></div>
+      <div class="stat-card stat-fixed"><div class="num">${fixed}</div><div class="lbl">Fixed</div></div>
+      <div class="stat-card stat-skip"><div class="num">${skip}</div><div class="lbl">Skipped</div></div>
+    </div>
+    <div class="filter-bar">
+      <select id="mgr-store" onchange="applyMgrFilter()"><option value="">All Stores</option></select>
+      <select id="mgr-date" onchange="applyMgrFilter()"><option value="">All Dates</option></select>
+      <select id="mgr-reason" onchange="applyMgrFilter()">
+        <option value="">All Reasons</option>
+        <option value="Multiple Records">Multiple Records</option>
+        <option value="Clock In Early">Clock In Early</option>
+        <option value="Clock Out Late">Clock Out Late</option>
+        <option value="Hours > 8:59">Hours &gt; 8:59</option>
+        <option value="Store Opened Late">Store Opened Late</option>
+      </select>
+      <select id="mgr-status" onchange="applyMgrFilter()">
+        <option value="">All Status</option>
+        <option value="PENDING" selected>Pending</option>
+        <option value="FIXED">Fixed</option>
+        <option value="SKIP">Skipped</option>
+      </select>
+      <button class="btn-clear" onclick="clearMgrFilters()">Clear</button>
+      <span class="record-count" id="mgr-count"></span>
+    </div>
+    <div id="mgr-cards"></div>`;
+
+  document.getElementById('manager-content').innerHTML = html;
+
+  // Populate store select
+  const stores = [...new Set(records.map(r => r.loc))].sort();
+  const sel = document.getElementById('mgr-store');
+  stores.forEach(s => {
+    const o = document.createElement('option'); o.value = s; o.textContent = s;
+    sel.appendChild(o);
+  });
+
+  // Populate date select
+  const dates = [...new Set(records.map(r => r.date).filter(Boolean))].sort();
+  const dsel = document.getElementById('mgr-date');
+  dates.forEach(d => {
+    const o = document.createElement('option'); o.value = d; o.textContent = d;
+    dsel.appendChild(o);
+  });
+
+  renderMgrCards(records);
+}
+
+function renderMgrCards(records) {
+  const storeFil  = (document.getElementById('mgr-store')  || {}).value || '';
+  const statusFil = (document.getElementById('mgr-status') || {}).value || '';
+
+  const reasonFil = (document.getElementById('mgr-reason') || {}).value || '';
+  const dateFil   = (document.getElementById('mgr-date')   || {}).value || '';
+  const filtered = records.filter(r => {
+    if (storeFil  && r.loc  !== storeFil)  return false;
+    if (statusFil && r.st   !== statusFil) return false;
+    if (reasonFil && r.cat  !== reasonFil) return false;
+    if (dateFil   && r.date !== dateFil)   return false;
+    return true;
+  });
+
+  document.getElementById('mgr-count').textContent = filtered.length + ' records';
+
+  let lastStore = null, html = '';
+  filtered.forEach(r => {
+    if (r.loc !== lastStore) {
+      html += `<div class="store-divider">${r.loc}</div>`;
+      lastStore = r.loc;
+    }
+    const catClass = catCss(r.cat);
+    const stPill   = stCss(r.st);
+    const csSet    = r.cs || '';
+    const ceSet    = r.ce || '';
+
+    html += `<div class="rec-row ${r.st.toLowerCase()}" id="card-${r.ri}">
+      <div class="rec-line1">
+        <span class="rec-name">${r.emp}</span>
+        <span class="rec-line1-right">
+          <span class="status-pill ${stPill}">${r.st}</span>
+          ${r.st==='FIXED'
+            ? `<button class="btn-undo-sm" onclick="undoCard(${r.ri})">↩ Undo</button>`
+            : `<button class="btn-skip-sm" onclick="skipCard(${r.ri})">Skip</button>`}
+        </span>
+      </div>
+      <div class="rec-line2">
+        <span class="cat-badge ${catClass}">${r.cat||'Other'}</span>
+        <span class="rec-date">${r.date}</span>
+        <span class="rec-times">${r.oStart||'—'} – ${r.oEnd||'—'}</span>
+        <span class="rec-hrs">${r.oHours}h</span>
+        <button class="time-btn-sm ${csSet?'set':''}" onclick="openPicker(${r.ri},'cs')">${csSet||'✏ Start'}</button>
+        <button class="time-btn-sm ${ceSet?'set':''}" onclick="openPicker(${r.ri},'ce')">${ceSet||'✏ End'}</button>
+      </div>
+    </div>`;
+  });
+
+  if (!filtered.length) html = '<div class="loading-state">No records match filter.</div>';
+  document.getElementById('mgr-cards').innerHTML = html;
+}
+
+function applyMgrFilter() {
+  const records = buildRecords();
+  renderMgrCards(records);
+}
+
+function clearMgrFilters() {
+  ['mgr-store','mgr-date','mgr-reason','mgr-status'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  applyMgrFilter();
+}
+
+function buildRecords() {
+  return ALL_CORRECTIONS.map((row, i) => {
+    const emp = (row[2] || '').trim();
+    const loc = (row[1] || '').trim();
+    if (!emp || !loc) return null;
+    const ri = i + 2;
+    const ch = CHANGES[ri] || {};
+    const st = ch.st || (row[0] || 'PENDING').trim().toUpperCase();
+    return { ri, st, loc, emp,
+      date:   (row[3] || '').trim(),
+      day:    (row[4] || '').trim(),
+      oStart: (row[5] || '').trim(),
+      oEnd:   (row[6] || '').trim(),
+      oHours: (row[7] || '').trim(),
+      issue:  (row[8] || '').trim(),
+      cs:     ch.cs !== undefined ? ch.cs : (row[9]  || '').trim(),
+      ce:     ch.ce !== undefined ? ch.ce : (row[10] || '').trim(),
+      cat:    (row[12] || '').trim(),
+    };
+  }).filter(Boolean);
+}
+
+function skipCard(ri) {
+  if (!CHANGES[ri]) CHANGES[ri] = {};
+  CHANGES[ri].st = 'SKIP';
+  refreshAfterChange();
+}
+function undoCard(ri) {
+  if (!CHANGES[ri]) CHANGES[ri] = {};
+  CHANGES[ri].st = 'PENDING';
+  delete CHANGES[ri].cs;
+  delete CHANGES[ri].ce;
+  refreshAfterChange();
+}
+function refreshAfterChange() {
+  updateSaveBtn();
+  applyMgrFilter();
+  updateBadge();
+  renderDashboard();
+}
+function updateBadge() {
+  const records = buildRecords();
+  const p = records.filter(r => r.st === 'PENDING').length;
+  document.getElementById('pendingBadge').textContent = p + ' Pending';
+}
+function updateSaveBtn() {
+  const n = Object.keys(CHANGES).length;
+  const btn = document.getElementById('saveBtn');
+  const lbl = document.getElementById('saveLabel');
+  if (btn) { btn.disabled = n === 0; }
+  if (lbl) lbl.textContent = n + ' change' + (n !== 1 ? 's' : '');
+}
+
+// ── Save ───────────────────────────────────────────────────
+async function saveAll() {
+  const btn = document.getElementById('saveBtn');
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+  const payload = Object.entries(CHANGES).map(([ri, ch]) => ({
+    rowIndex: parseInt(ri),
+    corrStart: ch.cs || '',
+    corrEnd:   ch.ce || '',
+    status:    ch.st || '',
+  }));
+  try {
+    const res = await callAPI('saveCorrections', { payload });
+    if (!res.ok) throw new Error(res.error);
+    toast('✅ Saved successfully!', 'success');
+    CHANGES = {};
+    await loadCorrections();
+  } catch(e) {
+    toast('⚠️ Save failed: ' + e.message, 'error');
+    btn.disabled = false;
+    btn.textContent = 'Save All Changes';
+  }
+}
+
+// ── Time Picker ────────────────────────────────────────────
+function openPicker(ri, field) {
+  pRow = ri; pField = field; pBuf = '';
+  const ch  = CHANGES[ri] || {};
+  const idx = ri - 2;
+  const existing = field === 'cs'
+    ? (ch.cs !== undefined ? ch.cs : (ALL_CORRECTIONS[idx] || [])[9] || '')
+    : (ch.ce !== undefined ? ch.ce : (ALL_CORRECTIONS[idx] || [])[10] || '');
+  const m = existing.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+  if (m) { pH = parseInt(m[1]); pM = parseInt(m[2]); pA = m[3].toUpperCase(); }
+  else   { pH = 12; pM = 0; pA = 'AM'; }
+  pEdit = 'h';
+  document.getElementById('pickerTitle').textContent = field === 'cs' ? 'Set Correct Start' : 'Set Correct End';
+  updatePickerDisplay();
+  document.getElementById('timePicker').classList.add('open');
+}
+function closeTimePicker() { document.getElementById('timePicker').classList.remove('open'); }
+function setEditH() { pEdit = 'h'; pBuf = ''; updatePickerDisplay(); }
+function setEditM() { pEdit = 'm'; pBuf = ''; updatePickerDisplay(); }
+function setAM(v)   { pA = v; updatePickerDisplay(); }
+
+function numPress(n) {
+  if (n === 'C') { pBuf = ''; updatePickerDisplay(); return; }
+  pBuf = (pBuf + String(n)).slice(-2);
+  const v = parseInt(pBuf);
+  if (pEdit === 'h') {
+    if (v >= 1 && v <= 12) pH = v;
+    else if (pBuf.length === 2) { pBuf = String(n); pH = parseInt(String(n)) || 12; }
+  } else {
+    if (v >= 0 && v <= 59) pM = v;
+    else if (pBuf.length === 2) { pBuf = String(n); pM = parseInt(String(n)) || 0; }
+  }
+  updatePickerDisplay();
+}
+
+function updatePickerDisplay() {
+  document.getElementById('dispH').textContent = String(pH).padStart(2,'0');
+  document.getElementById('dispM').textContent = String(pM).padStart(2,'0');
+  document.getElementById('dispH').className = 'time-seg' + (pEdit === 'h' ? ' active' : '');
+  document.getElementById('dispM').className = 'time-seg' + (pEdit === 'm' ? ' active' : '');
+  document.getElementById('pickerSub').textContent = 'Editing: ' + (pEdit === 'h' ? 'Hour' : 'Minute');
+  document.getElementById('btnAM').className = 'ampm-btn' + (pA === 'AM' ? ' active' : '');
+  document.getElementById('btnPM').className = 'ampm-btn' + (pA === 'PM' ? ' active' : '');
+}
+
+function confirmTime() {
+  const t = String(pH).padStart(2,'0') + ':' + String(pM).padStart(2,'0') + ' ' + pA;
+  if (!CHANGES[pRow]) CHANGES[pRow] = {};
+  CHANGES[pRow][pField] = t;
+  const cs = CHANGES[pRow].cs !== undefined ? CHANGES[pRow].cs
+    : (ALL_CORRECTIONS[pRow-2] || [])[9] || '';
+  const ce = CHANGES[pRow].ce !== undefined ? CHANGES[pRow].ce
+    : (ALL_CORRECTIONS[pRow-2] || [])[10] || '';
+  if (cs || ce) CHANGES[pRow].st = 'FIXED';
+  closeTimePicker();
+  refreshAfterChange();
+}
+
+// ── Raw Data ───────────────────────────────────────────────
+function populateRawStores() {
+  const locs = [...new Set(ALL_RAW.map(r => (r[0]||'').trim()).filter(s => s && s !== ''))].sort();
+  const sel = document.getElementById('raw-store');
+  sel.innerHTML = '<option value="">All Stores</option>';
+  locs.forEach(l => {
+    const o = document.createElement('option'); o.value = l; o.textContent = l;
+    sel.appendChild(o);
+  });
+
+  const dates = [...new Set(ALL_RAW.map(r => (r[2]||'').trim()).filter(d => d && d !== ''))].sort();
+  const dsel = document.getElementById('raw-date');
+  dsel.innerHTML = '<option value="">All Dates</option>';
+  dates.forEach(d => {
+    const o = document.createElement('option'); o.value = d; o.textContent = d;
+    dsel.appendChild(o);
+  });
+}
+
+function filterRaw() { renderRaw(); }
+function clearRawFilters() {
+  document.getElementById('raw-store').value = '';
+  document.getElementById('raw-date').value  = '';
+  document.getElementById('raw-issue').value = '';
+  renderRaw();
+}
+
+function issueType(iss) {
+  const t = (iss || '').toLowerCase();
+  if (t.includes('multiple')) return 'multiple';
+  if (t.includes('too early') || t.includes('clocked in early')) return 'early';
+  if (t.includes('too late') || t.includes('clocked out') || t.includes('opened late')) return 'late';
+  if (t.includes('hours') || t.includes('8:59')) return 'hours';
+  if (!iss) return 'clean';
+  return 'other';
+}
+
+function renderRaw() {
+  const storeFil = document.getElementById('raw-store').value;
+  const issFil   = document.getElementById('raw-issue').value;
+
+  const dateFil  = document.getElementById('raw-date').value;
+  const filtered = ALL_RAW.filter(r => {
+    const loc  = (r[0]||'').trim();
+    const date = (r[2]||'').trim();
+    const iss  = (r[7]||'').trim();
+    if (storeFil && loc  !== storeFil) return false;
+    if (dateFil  && date !== dateFil)  return false;
+    if (issFil) {
+      const it = issueType(iss);
+      if (issFil === 'clean' && it !== 'clean') return false;
+      if (issFil !== 'clean' && !it.includes(issFil)) return false;
+    }
+    return true;
+  });
+
+  document.getElementById('raw-count').textContent = filtered.length + ' records';
+
+  if (!filtered.length) {
+    document.getElementById('raw-content').innerHTML = '<div class="loading-state">No records match filter.</div>';
+    return;
+  }
+
+  let rows = '';
+  filtered.forEach(row => {
+    const loc  = (row[0]||'').trim();
+    const emp  = (row[1]||'').trim();
+    const date = (row[2]||'').trim();
+    const day  = (row[3]||'').trim();
+    const st   = (row[4]||'').trim();
+    const en   = (row[5]||'').trim();
+    const hrs  = parseFloat(row[6]||0);
+    const iss  = (row[7]||'').trim();
+    const isTotal = emp === 'Date Total' || emp === 'Location Total';
+    const it = issueType(iss);
+
+    let rowClass = '';
+    if (isTotal)          rowClass = 'rt-total';
+    else if (it==='multiple') rowClass = 'rt-multiple';
+    else if (iss)         rowClass = 'rt-flagged';
+
+    let issBadge = '';
+    if (it==='multiple') issBadge = `<span class="issue-badge ib-multiple">Multiple</span>`;
+    else if (it==='early') issBadge = `<span class="issue-badge ib-early">Early In</span>`;
+    else if (it==='late')  issBadge = `<span class="issue-badge ib-late">Late Out</span>`;
+    else if (it==='hours') issBadge = `<span class="issue-badge ib-hours">&gt;8:59h</span>`;
+
+    rows += `<tr class="${rowClass}">
+      <td>${loc}</td>
+      <td class="td-name">${emp}</td>
+      <td>${date}</td>
+      <td>${day}</td>
+      <td class="${it==='early'?'td-flag':''}">${st}</td>
+      <td class="${it==='late'?'td-flag':''}">${en}</td>
+      <td class="${hrs>8.99?'td-flag':''}">${hrs||''}</td>
+      <td>${issBadge}</td>
+    </tr>`;
+  });
+
+  document.getElementById('raw-content').innerHTML = `
+    <div class="raw-table-wrap">
+      <table class="raw-table">
+        <colgroup>
+          <col/><col/><col/><col/><col/><col/><col/><col/>
+        </colgroup>
+        <thead>
+          <tr>
+            <th>Store</th>
+            <th>Employee</th>
+            <th>Date</th>
+            <th>Day</th>
+            <th>Start</th>
+            <th>End</th>
+            <th>Hours</th>
+            <th>Issue</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+}
+
+// ── Dashboard ──────────────────────────────────────────────
+function renderDashboard() {
+  const records = buildRecords();
+  if (!records.length) return;
+
+  // Group by store
+  const storeMap = {};
+  records.forEach(r => {
+    if (!storeMap[r.loc]) storeMap[r.loc] = { pending: 0, fixed: 0, skip: 0 };
+    const m = storeMap[r.loc];
+    if (r.st === 'PENDING') m.pending++;
+    else if (r.st === 'FIXED') m.fixed++;
+    else m.skip++;
+  });
+
+  const total   = records.length;
+  const pending = records.filter(r => r.st === 'PENDING').length;
+  const fixed   = records.filter(r => r.st === 'FIXED').length;
+  const pct     = total ? Math.round(fixed / total * 100) : 0;
+
+  const catMap = {};
+  records.forEach(r => {
+    if (!catMap[r.cat]) catMap[r.cat] = 0;
+    catMap[r.cat]++;
+  });
+
+  let storeHtml = Object.entries(storeMap).sort((a,b) => b[1].pending - a[1].pending)
+    .map(([name, m]) => `
+      <div class="store-row">
+        <div class="store-name">${name}</div>
+        <div class="mini-pills">
+          ${m.pending ? `<span class="mini-pill mp-pending">${m.pending} pending</span>` : ''}
+          ${m.fixed   ? `<span class="mini-pill mp-fixed">${m.fixed} fixed</span>` : ''}
+        </div>
+      </div>`).join('');
+
+  let catHtml = Object.entries(catMap).sort((a,b) => b[1]-a[1])
+    .map(([name, count]) => `
+      <div class="store-row">
+        <span class="cat-badge ${catCss(name)}" style="margin-right:8px">${name}</span>
+        <div style="flex:1;background:#f0f2f5;border-radius:999px;height:8px;overflow:hidden">
+          <div style="height:100%;width:${Math.round(count/total*100)}%;background:var(--navy);border-radius:999px"></div>
+        </div>
+        <span style="font-size:13px;font-weight:600;margin-left:10px;min-width:28px;text-align:right">${count}</span>
+      </div>`).join('');
+
+  document.getElementById('dash-content').innerHTML = `
+    <div class="stats-row" style="margin-top:8px">
+      <div class="stat-card stat-pending"><div class="num">${pending}</div><div class="lbl">Pending</div></div>
+      <div class="stat-card stat-fixed"><div class="num">${fixed}</div><div class="lbl">Fixed</div></div>
+      <div class="stat-card"><div class="num">${pct}%</div><div class="lbl">Complete</div></div>
+    </div>
+    <div class="dash-section">
+      <h3>By Store</h3>${storeHtml}
+    </div>
+    <div class="dash-section">
+      <h3>By Issue Type</h3>${catHtml}
+    </div>`;
+}
+
+// ── Helpers ────────────────────────────────────────────────
+function catCss(cat) {
+  const t = (cat || '').toLowerCase();
+  if (t.includes('multiple')) return 'cat-multiple';
+  if (t.includes('early'))    return 'cat-early';
+  if (t.includes('late'))     return 'cat-late';
+  if (t.includes('hours'))    return 'cat-hours';
+  return 'cat-other';
+}
+function stCss(st) {
+  if (st === 'FIXED') return 'pill-fixed';
+  if (st === 'SKIP')  return 'pill-skip';
+  return 'pill-pending';
+}
+
+// ── Tab Switching ──────────────────────────────────────────
+function switchTab(tab) {
+  CURRENT_TAB = tab;
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    const names = ['manager','rawdata','processed','dashboard','settings'];
+    t.classList.toggle('active', names[i] === tab);
+  });
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + tab).classList.add('active');
+  if (tab === 'processed') loadProcessed();
+}
+
+// ── Processed ─────────────────────────────────────────────
+async function buildProcessed() {
+  const btn = document.getElementById('buildBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Building…';
+  document.getElementById('proc-summary').style.display = 'none';
+  document.getElementById('proc-content').innerHTML =
+    '<div class="loading-state"><div class="spinner"></div><div>Building Processed sheet…</div></div>';
+  try {
+    const res = await callAPI('buildProcessed');
+    if (!res.ok) throw new Error(res.error);
+    // Show summary
+    const s = document.getElementById('proc-summary');
+    s.style.display = 'block';
+    s.innerHTML = `
+      <div class="proc-stat"><span class="proc-num">${res.totalRows}</span><span class="proc-lbl">Total Rows</span></div>
+      <div class="proc-stat"><span class="proc-num green">${res.corrected}</span><span class="proc-lbl">Corrections Applied</span></div>
+      <div class="proc-stat"><span class="proc-num ${res.stillFlagged>0?'red':'green'}">${res.stillFlagged}</span><span class="proc-lbl">Still Flagged</span></div>`;
+    renderProcessedTable(res.data);
+    toast('✅ Processed sheet built!', 'success');
+  } catch(e) {
+    document.getElementById('proc-content').innerHTML =
+      `<div class="error-state">⚠️ ${e.message}</div>`;
+    toast('⚠️ Build failed: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '▶ Build Processed Sheet';
+  }
+}
+
+async function loadProcessed() {
+  document.getElementById('proc-content').innerHTML =
+    '<div class="loading-state"><div class="spinner"></div><div>Loading…</div></div>';
+  try {
+    const res = await callAPI('getProcessed');
+    if (!res.ok) throw new Error(res.error);
+    if (!res.data.length) {
+      document.getElementById('proc-content').innerHTML =
+        '<div class="loading-state">No processed data yet. Click Build first.</div>';
+      return;
+    }
+    renderProcessedTable(res.data);
+  } catch(e) {
+    document.getElementById('proc-content').innerHTML =
+      `<div class="error-state">⚠️ ${e.message}</div>`;
+  }
+}
+
+let ALL_PROCESSED = [];
+
+function renderProcessedTable(data) {
+  if (!data || !data.length) {
+    document.getElementById('proc-content').innerHTML =
+      '<div class="loading-state">No processed rows found.</div>';
+    document.getElementById('proc-filter-bar').style.display = 'none';
+    return;
+  }
+
+  ALL_PROCESSED = data;
+
+  // Populate store filter
+  const stores = [...new Set(data.map(r => (r[0]||'').trim()).filter(Boolean))].sort();
+  const sel = document.getElementById('proc-store');
+  sel.innerHTML = '<option value="">All Stores</option>';
+  stores.forEach(s => {
+    const o = document.createElement('option'); o.value = s; o.textContent = s;
+    sel.appendChild(o);
+  });
+
+  document.getElementById('proc-filter-bar').style.display = 'flex';
+  drawProcessedTable(data);
+}
+
+function filterProcessed() {
+  const storeFil = document.getElementById('proc-store').value;
+  const filtered = storeFil
+    ? ALL_PROCESSED.filter(r => (r[0]||'').trim() === storeFil)
+    : ALL_PROCESSED;
+  document.getElementById('proc-count').textContent = filtered.length + ' records';
+  drawProcessedTable(filtered);
+}
+
+function clearProcFilter() {
+  document.getElementById('proc-store').value = '';
+  filterProcessed();
+}
+
+function drawProcessedTable(data) {
+  document.getElementById('proc-count').textContent = data.length + ' records';
+  let rows = '';
+  data.forEach(row => {
+    const loc          = (row[0]||'').trim();
+    const emp          = (row[1]||'').trim();
+    const date         = (row[2]||'').trim();
+    const day          = (row[3]||'').trim();
+    const st           = (row[4]||'').trim();
+    const en           = (row[5]||'').trim();
+    const hrs          = (row[6]||'').trim();
+    const corrected    = (row[7]||'').trim();
+    const iss          = (row[8]||'').trim();
+    const wasCorrected = corrected === 'YES';
+    rows += `<tr class="${wasCorrected ? 'proc-fixed' : iss ? 'proc-flagged' : ''}">
+      <td>${loc}</td>
+      <td class="td-name">${emp}</td>
+      <td>${date}</td>
+      <td>${day}</td>
+      <td>${st}</td>
+      <td>${en}</td>
+      <td>${hrs}</td>
+      <td>${wasCorrected ? '<span class="badge-corrected">✓ Fixed</span>' : ''}</td>
+      <td style="font-size:11px;color:var(--muted)">${iss}</td>
+    </tr>`;
+  });
+  document.getElementById('proc-content').innerHTML = `
+    <div class="raw-table-wrap">
+      <table class="proc-table">
+        <thead><tr>
+          <th>Store</th><th>Employee</th><th>Date</th><th>Day</th>
+          <th>Start</th><th>End</th><th>Hours</th><th>Status</th><th>Issue</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+}
+
+// ── Toast ──────────────────────────────────────────────────
+function toast(msg, type = '') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast ' + type + ' show';
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
 </script>
 </body>
 </html>
