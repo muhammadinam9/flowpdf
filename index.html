@@ -800,6 +800,32 @@ body {
 }
 .proc-table td:last-child { font-size: 12px; color: var(--muted); white-space: normal; }
 .proc-table tbody tr:hover td { background: #f0f4ff; }
+
+/* ── Top Loading Bar ────────────────────────────────────── */
+.loading-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  width: 0%;
+  background: var(--gold);
+  z-index: 9999;
+  transition: width 0.4s ease;
+  border-radius: 0 2px 2px 0;
+}
+.loading-bar.active {
+  animation: loadprogress 2s ease infinite;
+}
+@keyframes loadprogress {
+  0%   { width: 0%; opacity: 1; }
+  70%  { width: 85%; opacity: 1; }
+  100% { width: 95%; opacity: 0.6; }
+}
+.loading-bar.done {
+  width: 100%;
+  opacity: 0;
+  transition: width 0.2s ease, opacity 0.4s ease 0.2s;
+}
 </style>
 </head>
 <body>
@@ -807,10 +833,11 @@ body {
 <!-- ─── CONFIG — SET YOUR WEB APP URL ──────────────────── -->
 <script>
 const CONFIG = {
-  WEB_APP_URL: 'https://script.google.com/macros/s/AKfycby7EJnot2uUosV8CqRm3avywLVy87wP-4ps5naCm_m4udWHNlyTPeNpPGwHSQrDBaS0pQ/exec',
+  WEB_APP_URL: 'https://script.google.com/macros/s/AKfycbwZAQIws-1RPTlCPA5xuglSRXj8TtRghH4BP9HpgFaDuSw_gYP6pKnkNw79rEv6ffDQ9A/exec',
 };
 </script>
 
+<div class="loading-bar" id="loadingBar"></div>
 <!-- ─── TOP BAR ─────────────────────────────────────────── -->
 <div class="topbar">
   <div class="topbar-logo">Employee <span>Hours Corrections</span></div>
@@ -970,13 +997,23 @@ let pRow = null, pField = null, pH = 12, pM = 0, pA = 'AM', pEdit = 'h', pBuf = 
 window.addEventListener('DOMContentLoaded', () => {
   const saved = localStorage.getItem('aqWebAppUrl') || '';
   document.getElementById('webAppUrlInput').value = saved;
-  CONFIG.WEB_APP_URL = saved;
+  // Always use hardcoded URL
   if (CONFIG.WEB_APP_URL) {
+    showGlobalLoader('Loading Employee Hours Corrections…');
     loadAll();
   } else {
     showConfigPrompt();
   }
 });
+
+function showGlobalLoader(msg) {
+  document.getElementById('manager-content').innerHTML = `
+    <div class="loading-state" style="padding:60px 20px">
+      <div class="spinner"></div>
+      <div style="font-size:15px;font-weight:600;color:var(--navy);margin-top:12px">${msg}</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:6px">Connecting to Google Sheets…</div>
+    </div>`;
+}
 
 function showConfigPrompt() {
   document.getElementById('manager-content').innerHTML = `
@@ -1002,8 +1039,11 @@ function saveConfig() {
 
 // ── Load All Data ──────────────────────────────────────────
 async function loadAll() {
-  loadCorrections();
-  loadRawData();
+  const bar = document.getElementById('loadingBar');
+  bar.className = 'loading-bar active';
+  await Promise.all([loadCorrections(), loadRawData()]);
+  bar.className = 'loading-bar done';
+  setTimeout(() => bar.className = 'loading-bar', 700);
 }
 
 function callAPI(action, payload = {}) {
@@ -1048,7 +1088,12 @@ function callAPI(action, payload = {}) {
 
 async function loadCorrections() {
   const el = document.getElementById('manager-content');
-  el.innerHTML = '<div class="loading-state"><div class="spinner"></div><div>Loading corrections…</div></div>';
+  el.innerHTML = `
+    <div class="loading-state" style="padding:60px 20px">
+      <div class="spinner"></div>
+      <div style="font-size:15px;font-weight:600;color:var(--navy);margin-top:12px">Loading Corrections…</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:6px">Reading from Google Sheets</div>
+    </div>`;
   try {
     const data = await callAPI('getCorrections');
     if (!data.ok) throw new Error(data.error);
@@ -1056,16 +1101,27 @@ async function loadCorrections() {
     CHANGES = {};
     renderManager();
     renderDashboard();
-    document.getElementById('conn-status').textContent = '✅ Connected — data loaded';
+    document.getElementById('conn-status').textContent = '✅ Connected — ' + ALL_CORRECTIONS.length + ' records loaded';
   } catch(e) {
-    el.innerHTML = `<div class="error-state">⚠️ ${e.message}<br><button class="retry-btn" onclick="loadCorrections()">Retry</button></div>`;
+    el.innerHTML = `
+      <div class="error-state">
+        <div style="font-size:32px;margin-bottom:12px">⚠️</div>
+        <div style="font-size:14px;font-weight:600;margin-bottom:6px">${e.message}</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:16px">Check your internet connection and try again</div>
+        <button class="retry-btn" onclick="loadCorrections()">🔄 Retry</button>
+      </div>`;
     document.getElementById('conn-status').textContent = '❌ Error: ' + e.message;
   }
 }
 
 async function loadRawData() {
   const el = document.getElementById('raw-content');
-  el.innerHTML = '<div class="loading-state"><div class="spinner"></div><div>Loading raw data…</div></div>';
+  el.innerHTML = `
+    <div class="loading-state" style="padding:60px 20px">
+      <div class="spinner"></div>
+      <div style="font-size:15px;font-weight:600;color:var(--navy);margin-top:12px">Loading Raw Data…</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:6px">Reading from Google Sheets</div>
+    </div>`;
   try {
     const data = await callAPI('getRawData');
     if (!data.ok) throw new Error(data.error);
@@ -1073,7 +1129,12 @@ async function loadRawData() {
     populateRawStores();
     renderRaw();
   } catch(e) {
-    el.innerHTML = `<div class="error-state">⚠️ ${e.message}<br><button class="retry-btn" onclick="loadRawData()">Retry</button></div>`;
+    el.innerHTML = `
+      <div class="error-state">
+        <div style="font-size:32px;margin-bottom:12px">⚠️</div>
+        <div style="font-size:14px;font-weight:600;margin-bottom:6px">${e.message}</div>
+        <button class="retry-btn" onclick="loadRawData()">🔄 Retry</button>
+      </div>`;
   }
 }
 
