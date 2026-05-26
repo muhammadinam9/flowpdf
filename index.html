@@ -826,6 +826,18 @@ body {
   opacity: 0;
   transition: width 0.2s ease, opacity 0.4s ease 0.2s;
 }
+.refresh-btn {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 6px;
+  color: #fff;
+  font-size: 16px;
+  padding: 4px 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.refresh-btn:hover { background: rgba(255,255,255,0.1); }
+.refresh-btn.spinning { animation: spin 1s linear infinite; }
 </style>
 </head>
 <body>
@@ -841,6 +853,7 @@ const CONFIG = {
 <!-- ─── TOP BAR ─────────────────────────────────────────── -->
 <div class="topbar">
   <div class="topbar-logo">Employee <span>Hours Corrections</span></div>
+  <button class="refresh-btn" id="refreshBtn" onclick="refreshData()" title="Refresh Data">🔄</button>
   <span class="topbar-badge" id="pendingBadge">—</span>
 </div>
 <div class="tabnav">
@@ -1755,6 +1768,27 @@ function drawProcessedTable(data) {
         <tbody>${rows}</tbody>
       </table>
     </div>`;
+}
+
+// ── Refresh ───────────────────────────────────────────────
+async function refreshData() {
+  const btn = document.getElementById('refreshBtn');
+  btn.classList.add('spinning');
+  btn.disabled = true;
+  try {
+    // Clear server cache first
+    await callAPI('clearCache');
+    // Then reload everything fresh
+    ALL_CORRECTIONS = [];
+    ALL_RAW = [];
+    await loadAll();
+    toast('✅ Data refreshed!', 'success');
+  } catch(e) {
+    toast('⚠️ Refresh failed', 'error');
+  } finally {
+    btn.classList.remove('spinning');
+    btn.disabled = false;
+  }
 }
 
 // ── Toast ──────────────────────────────────────────────────
